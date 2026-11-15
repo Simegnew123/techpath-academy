@@ -1,0 +1,67 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
+import { createCourse, createModule, addLesson } from "@/lib/courses";
+import { getCategoryByName } from "@/lib/categories";
+
+export async function POST(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  if (user.role !== "admin" && user.role !== "instructor")
+    return NextResponse.json({ error: "Admin or instructor only." }, { status: 403 });
+
+  const body = await req.json().catch(() => null);
+  const title = String(body?.title || "").trim();
+  if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
+
+  // Resolve categoryId from category name or id
+  let categoryId = String(body?.categoryId || body?.category || "");
+  if (!categoryId || categoryId.length < 10) {
+    // It's a category name, resolve to id
+    const cat = getCategoryByName(categoryId) || getCategoryByName("IT Support");
+    categoryId = cat?.id || "cat-it-support";
+  }
+
+  const course = createCourse({
+    title,
+    categoryId,
+    description: String(body?.description || ""),
+    coverImage: String(body?.coverImage || ""),
+    price: Number(body?.price) || 0,
+    slug: String(body?.slug || ""),
+    published: Boolean(body?.published),
+    instructorId: user.id,
+    level: String(body?.level || "Beginner") as "Beginner" | "Intermediate" | "Advanced",
+    language: String(body?.language || "English"),
+  });
+
+  // Handle modules with nested lessons (new format)
+  const modules = Array.isArray(body?.modules) ? body.modules : [];
+
+  // Fallback: if no modules but lessons exist (old format), put all in one module
+  const oldLessons = Array.isArray(body?.lessons) ? body.lessons : [];
+  if (modules.length === 0 && oldLessons.length > 0) {
+    modules.push({ title: "Course Content", lessons: oldLessons });
+  }
+
+  for (const mod of modules) {
+    if (!String(mod?.title || "").trim()) continue;
+    const moduleRecord = createModule(course.id, String(mod.title).trim());
+    const modLessons = Array.isArray(mod.lessons) ? mod.lessons : [];
+    modLessons
+      .filter((l: Record<string, unknown>) => l && String(l.title || "").trim())
+      .forEach((l: Record<string, unknown>) => {
+        addLesson({
+          moduleId: moduleRecord.id,
+          courseId: course.id,
+          title: String(l.title).trim(),
+          type: (String(l.type || "text") as "video" | "text" | "quiz" | "pdf"),
+          videoUrl: String(l.videoUrl || ""),
+          content: String(l.content || ""),
+          duration: Number(l.duration) || 0,
+          preview: Boolean(l.preview),
+        });
+      });
+  }
+
+  return NextResponse.json({ course: { id: course.id, slug: course.slug } });
+}
