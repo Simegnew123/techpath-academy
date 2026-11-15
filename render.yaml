@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: techpath-academy
+    env: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PAYMENT_MODE
+        value: demo
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+    disk:
+      name: lms-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
