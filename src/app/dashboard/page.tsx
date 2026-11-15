@@ -12,12 +12,22 @@ import { buildCourseCardData } from "@/lib/courseData";
 
 export const revalidate = 0;
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ purchased?: string; pending?: string; course?: string; ref?: string; method?: string }>;
+}) {
+  const sp = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const db = readDB();
   const enrollments = getEnrollments(user.id);
+
+  // Pending manual payments (Telebirr, CBE) awaiting verification
+  const pendingPayments = db.payments.filter(
+    (p) => p.userId === user.id && p.status === "pending"
+  );
 
   // Courses the user has access to (paid enrollments + free courses with progress)
   const paidCourses = enrollments
@@ -65,6 +75,39 @@ export default async function DashboardPage() {
           Browse Courses
         </Link>
       </div>
+
+      {/* Pending payment banner (Telebirr / CBE) */}
+      {sp.pending === "1" && (
+        <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-6">
+          <h3 className="text-lg font-semibold text-amber-900">⏳ Payment Verification in Progress</h3>
+          <p className="mt-2 text-sm text-amber-800">
+            Thank you! Your {sp.method === "telebirr" ? "Telebirr" : sp.method === "cbe" ? "CBE" : "manual"}{" "}
+            payment reference is <span className="font-mono font-bold">{sp.ref}</span>.
+            We&apos;re confirming your payment — your course will be unlocked as soon as it&apos;s verified
+            (usually within a few minutes).
+          </p>
+        </div>
+      )}
+
+      {/* Pending payments list */}
+      {pendingPayments.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/50 p-6">
+          <h3 className="font-semibold text-amber-900">Pending Payments ({pendingPayments.length})</h3>
+          <div className="mt-3 space-y-2">
+            {pendingPayments.map((p) => {
+              const c = getCourseById(p.courseId);
+              return (
+                <div key={p.id} className="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm">
+                  <span className="font-medium text-slate-700">{c?.title || "Course"}</span>
+                  <span className="font-mono text-xs text-amber-700">
+                    {p.method} · {p.ref} · {formatPrice(p.amount)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Stats cards */}
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
