@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLesson, hasAccess, markLessonCompleted, getLessonsForCourse, getCompletionPercent } from "@/lib/courses";
-import { readDB, writeDB, getCourseById, createNotification, generateCertCode, generateCertHash, notifyAdmins, uid, nowISO } from "@/lib/store";
+import { readDB, writeDB, getCourseById, createNotification, generateCertCode, generateCertHash, notifyAdmins, uid, nowISO, getFinalExamForCourse } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(
@@ -55,13 +55,16 @@ export async function POST(
   }
 
   // Certificate generation on 100% completion
+  // BUT if a final exam exists, certificate is issued only after exam pass (not here)
   if (completion === 100 && completed) {
+    const finalExam = getFinalExamForCourse(course.id);
     const db = readDB();
     const existingCert = db.certificates.find(
       (c) => c.userId === user.id && c.courseId === course.id
     );
 
-    if (!existingCert) {
+    if (!existingCert && !finalExam) {
+      // No final exam → auto-issue certificate on 100% lesson completion
       // Create enhanced certificate with hash + skills
       const certCode = generateCertCode();
       const issuedAt = new Date().toISOString();
@@ -121,6 +124,15 @@ export async function POST(
         `${user.name} completed "${course.title}" and earned a certificate (Code: ${cert.code}).`,
         `/certificates/${cert.code}`
       );
+    } else if (!existingCert && finalExam) {
+      // 100% lessons done but final exam required → notify student
+      createNotification({
+        userId: user.id,
+        type: "lesson_complete",
+        title: "📋 Final Exam Required",
+        message: `You've completed all lessons in "${course.title}"! Take the final exam to earn your certificate.`,
+        link: `/courses/${course.slug}/exam`,
+      });
     }
   }
 
