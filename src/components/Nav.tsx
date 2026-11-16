@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import NotificationBell from "./NotificationBell";
 
 type Me = {
   user: { name: string; role: string } | null;
@@ -52,6 +53,7 @@ export default function Nav() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
+              <NotificationBell loggedIn={!!user} />
               <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
                 Hi, {user.name.split(" ")[0]}
               </span>
@@ -105,6 +107,9 @@ export default function Nav() {
             <Link href="/#free-tutorials" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Free Tutorials</Link>
             {user && (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">My Learning</Link>
+            )}
+            {user && (
+              <Link href="/notifications" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">🔔 Notifications</Link>
             )}
             {(user?.role === "admin" || user?.role === "instructor") && (
               <Link href="/admin" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">
