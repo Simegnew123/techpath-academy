@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCourseById, enroll } from "@/lib/courses";
+import { getCourseById, enroll, formatPrice } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
-import { readDB, mutate, uid, nowISO } from "@/lib/store";
+import { readDB, mutate, uid, nowISO, createNotification, notifyAdmins } from "@/lib/store";
 
 // Methods that go through Flutterwave in live mode
 const FLUTTERWAVE_METHODS = ["card", "mpesa"];
@@ -49,6 +49,28 @@ export async function POST(
       });
     });
     enroll(user.id, courseId, ref);
+
+    // Notifications
+    createNotification({
+      userId: user.id,
+      type: "enrollment",
+      title: `🎓 Enrolled in ${course.title}!`,
+      message: `Welcome to the course! Start learning now — your progress is saved automatically.`,
+      link: `/courses/${course.slug}/chapters`,
+    });
+    createNotification({
+      userId: user.id,
+      type: "payment",
+      title: `💳 Payment confirmed`,
+      message: `${formatPrice(course.price)} via ${method} — Ref: ${ref}`,
+      link: `/dashboard`,
+    });
+    notifyAdmins(
+      "New enrollment",
+      `${user.name} enrolled in "${course.title}" (${formatPrice(course.price)} via ${method})`,
+      `/admin`
+    );
+
     return NextResponse.json({ redirect: `/dashboard?purchased=1&course=${course.slug}` });
   }
 
@@ -69,6 +91,22 @@ export async function POST(
         createdAt: nowISO(),
       });
     });
+
+    // Notifications for manual payment
+    const methodName = method === "telebirr" ? "Telebirr" : method === "cbe" ? "CBE" : method;
+    createNotification({
+      userId: user.id,
+      type: "payment",
+      title: `⏳ ${methodName} payment pending`,
+      message: `Please complete your ${methodName} payment of ${formatPrice(course.price)}. Ref: ${ref}. Your course will unlock after verification.`,
+      link: `/dashboard`,
+    });
+    notifyAdmins(
+      `${methodName} payment pending`,
+      `${user.name} requested to pay for "${course.title}" via ${methodName}. Ref: ${ref}. Please verify payment.`,
+      `/admin`
+    );
+
     // Tell the user to complete payment on their end; admin will verify
     return NextResponse.json({
       redirect: `/dashboard?pending=1&course=${course.slug}&ref=${ref}&method=${method}`,
