@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createCourse, createModule, addLesson } from "@/lib/courses";
 import { getCategoryByName } from "@/lib/categories";
+import { notifyAllStudents } from "@/lib/store";
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -61,6 +62,16 @@ export async function POST(req: NextRequest) {
           preview: Boolean(l.preview),
         });
       });
+  }
+
+  // Notify all students about the new course (only if published)
+  if (course.published) {
+    const priceText = course.price === 0 ? "FREE" : `${course.price.toLocaleString()}`;
+    notifyAllStudents(
+      "📖 New course available",
+      `"${course.title}" is now available — ${priceText}. Check it out!`,
+      `/courses/${course.slug}`
+    );
   }
 
   return NextResponse.json({ course: { id: course.id, slug: course.slug } });
