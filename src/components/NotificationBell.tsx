@@ -22,6 +22,7 @@ const ICONS: Record<string, string> = {
   new_book: "📚",
   welcome: "👋",
   admin: "🔔",
+  recertification: "⏰",
 };
 
 function timeAgo(iso: string): string {
