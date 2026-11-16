@@ -16,6 +16,8 @@ import {
   getReviewsForCourse,
   getAverageRating,
   getCompletionPercent,
+  getFinalExamForCourse,
+  hasPassedFinalExam,
 } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 import { buildCourseCardData } from "@/lib/courseData";
@@ -150,6 +152,24 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                   <div className="flex justify-between"><span>🌐 Language</span><span className="font-medium">{course.language}</span></div>
                   <div className="flex justify-between"><span>🏆 Certificate</span><span className="font-medium">Yes</span></div>
                 </div>
+
+                {/* Final Exam button (enrolled students who completed 100%) */}
+                {access && progress === 100 && getFinalExamForCourse(course.id) && (
+                  <div className="mt-5 border-t border-slate-100 pt-4">
+                    {hasPassedFinalExam(user!.id, course.id) ? (
+                      <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-center">
+                        <span className="text-sm font-semibold text-green-700">✅ Final Exam Passed</span>
+                      </div>
+                    ) : (
+                      <Link
+                        href={`/courses/${course.slug}/exam`}
+                        className="block rounded-xl bg-amber-500 px-6 py-3 text-center font-bold text-white transition hover:bg-amber-600"
+                      >
+                        📋 Take Final Exam
+                      </Link>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
