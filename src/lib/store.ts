@@ -158,7 +158,7 @@ export type Question = {
 
 export type Quiz = {
   id: string;
-  lessonId: string;            // FK -> lessons.id (quiz-type lesson)
+  lessonId: string | null;     // null = course-level final exam (not tied to a lesson)
   courseId: string;            // denormalized
   title: string;
   description: string;
@@ -166,6 +166,7 @@ export type Quiz = {
   maxAttempts: number;         // 0 = unlimited
   shuffleQuestions: boolean;
   timeLimit: number;           // minutes, 0 = no limit
+  isFinalExam: boolean;        // true = final course assessment
   createdAt: string;
 };
 
@@ -578,6 +579,18 @@ export function getQuizByLessonId(lessonId: string): Quiz | undefined {
 
 export function getQuizById(id: string): Quiz | undefined {
   return readDB().quizzes.find((q) => q.id === id);
+}
+
+// Get the final exam for a course (lessonId === null && isFinalExam === true)
+export function getFinalExamForCourse(courseId: string): Quiz | undefined {
+  return readDB().quizzes.find((q) => q.courseId === courseId && q.isFinalExam);
+}
+
+// Check if a student has passed the final exam
+export function hasPassedFinalExam(userId: string, courseId: string): boolean {
+  const exam = getFinalExamForCourse(courseId);
+  if (!exam) return true; // no final exam = no requirement
+  return getQuizAttempts(userId, exam.id).some((a) => a.passed);
 }
 
 export function getQuestionsForQuiz(quizId: string): Question[] {
