@@ -17,6 +17,7 @@ import {
 import { getCurrentUser } from "@/lib/auth";
 import CompleteButton from "@/components/CompleteButton";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
+import InteractiveVideoPlayer from "@/components/InteractiveVideoPlayer";
 import { getYouTubeEmbed } from "@/lib/video";
 
 export const revalidate = 0;
@@ -99,21 +100,13 @@ export default async function LessonPage({
               </div>
             ) : (
               <>
-                <div className="mt-4 overflow-hidden rounded-2xl bg-black shadow-lg">
-                  {embed ? (
-                    <iframe
-                      className="aspect-video w-full"
-                      src={embed}
-                      title={lesson.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <div className="flex aspect-video w-full items-center justify-center bg-slate-900 text-slate-400">
-                      {lesson.type === "video" ? "No video URL set" : "📝 Text lesson — scroll down to read"}
-                    </div>
-                  )}
-                </div>
+                <InteractiveVideoPlayer
+                  videoUrl={lesson.videoUrl}
+                  title={lesson.title}
+                  chapters={[]}
+                  videoQuizzes={[]}
+                  transcript={[]}
+                />
 
                 {/* Content */}
                 {html && (
