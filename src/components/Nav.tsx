@@ -36,6 +36,7 @@ export default function Nav() {
         <nav className="hidden items-center gap-5 text-sm font-medium text-slate-600 md:flex">
           <Link href="/" className="hover:text-indigo-600">Home</Link>
           <Link href="/courses" className="hover:text-indigo-600">Courses</Link>
+          <Link href="/books" className="hover:text-indigo-600">Library</Link>
           <Link href="/#free-tutorials" className="hover:text-indigo-600">Free Tutorials</Link>
           {user && (
             <Link href="/dashboard" className="hover:text-indigo-600">My Learning</Link>
@@ -100,6 +101,7 @@ export default function Nav() {
           <div className="flex flex-col gap-3 text-sm font-medium text-slate-600">
             <Link href="/" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Home</Link>
             <Link href="/courses" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Courses</Link>
+            <Link href="/books" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Library</Link>
             <Link href="/#free-tutorials" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Free Tutorials</Link>
             {user && (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">My Learning</Link>
