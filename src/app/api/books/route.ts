@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllBooks, createBook } from "@/lib/store";
+import { getAllBooks, createBook, notifyAllStudents } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 
 // GET /api/books — list all books (public)
@@ -32,6 +32,13 @@ export async function POST(req: NextRequest) {
     uploadedBy: user.id,
     featured: Boolean(body.featured),
   });
+
+  // Notify all students about the new book
+  notifyAllStudents(
+    "📚 New book added",
+    `"${book.title}" by ${book.author} is now available in the library.`,
+    `/books/${book.id}`
+  );
 
   return NextResponse.json({ book }, { status: 201 });
 }
