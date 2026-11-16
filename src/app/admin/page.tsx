@@ -8,6 +8,7 @@ import {
   getModulesForCourse,
   getReviewsForCourse,
   getAverageRating,
+  getPlatformStats,
 } from "@/lib/store";
 
 export const revalidate = 0;
@@ -15,9 +16,13 @@ export const revalidate = 0;
 export default async function AdminPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.role !== "admin" && user.role !== "instructor") redirect("/");
+  if (user.role !== "admin" && user.role !== "instructor" && user.role !== "teaching_assistant" && user.role !== "auditor") redirect("/");
+
+  // Auditors only see audit logs
+  if (user.role === "auditor") redirect("/admin/audit-logs");
 
   const db = readDB();
+  const stats = getPlatformStats();
   const allCourses = getCourses();
   // Instructors see only their own courses; admins see all
   const courses =
@@ -55,6 +60,14 @@ export default async function AdminPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          {user.role === "admin" && (
+            <Link
+              href="/admin/audit-logs"
+              className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              📋 Audit Logs
+            </Link>
+          )}
           <Link
             href="/admin/books"
             className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -71,33 +84,36 @@ export default async function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="text-2xl">📚</div>
           <div className="mt-1 text-xl font-bold text-slate-900">{courses.length}</div>
           <div className="text-xs text-slate-500">Total Courses</div>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-2xl">✅</div>
-          <div className="mt-1 text-xl font-bold text-slate-900">{publishedCount}</div>
-          <div className="text-xs text-slate-500">Published</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-2xl">📖</div>
-          <div className="mt-1 text-xl font-bold text-slate-900">{totalLessons}</div>
-          <div className="text-xs text-slate-500">Lessons</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="text-2xl">👥</div>
-          <div className="mt-1 text-xl font-bold text-slate-900">{totalEnrollments}</div>
-          <div className="text-xs text-slate-500">Enrollments</div>
+          <div className="mt-1 text-xl font-bold text-slate-900">{stats.totalStudents}</div>
+          <div className="text-xs text-slate-500">Students</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="text-2xl">📝</div>
+          <div className="mt-1 text-xl font-bold text-slate-900">{stats.totalQuizzes}</div>
+          <div className="text-xs text-slate-500">Quizzes</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="text-2xl">🏅</div>
+          <div className="mt-1 text-xl font-bold text-slate-900">{stats.totalCertificates}</div>
+          <div className="text-xs text-slate-500">Certificates</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="text-2xl">📊</div>
+          <div className="mt-1 text-xl font-bold text-slate-900">{stats.avgQuizScore}%</div>
+          <div className="text-xs text-slate-500">Avg Quiz Score</div>
         </div>
         {user.role === "admin" && (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-2xl">💰</div>
-            <div className="mt-1 text-xl font-bold text-slate-900">
-              {formatPrice(totalRevenue)}
-            </div>
+            <div className="mt-1 text-xl font-bold text-slate-900">{formatPrice(stats.totalRevenue)}</div>
             <div className="text-xs text-slate-500">Revenue</div>
           </div>
         )}
