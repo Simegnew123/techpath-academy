@@ -10,6 +10,7 @@ import {
   getAverageRating,
   getPlatformStats,
 } from "@/lib/store";
+import RecertCheckButton from "@/components/RecertCheckButton";
 
 export const revalidate = 0;
 
@@ -82,6 +83,13 @@ export default async function AdminPage() {
           </Link>
         </div>
       </div>
+
+      {/* Recertification check (admin only) */}
+      {user.role === "admin" && (
+        <div className="mt-6">
+          <RecertCheckButton />
+        </div>
+      )}
 
       {/* Stats */}
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
