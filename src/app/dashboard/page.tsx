@@ -11,6 +11,7 @@ import {
   getExpiredCertificates,
 } from "@/lib/store";
 import { buildCourseCardData } from "@/lib/courseData";
+import GamificationWidget from "@/components/GamificationWidget";
 
 export const revalidate = 0;
 
@@ -138,6 +139,11 @@ export default async function DashboardPage({
           <div className="mt-2 text-2xl font-bold text-slate-900">{completedLessons}/{totalLessons}</div>
           <div className="text-sm text-slate-500">Lessons Done</div>
         </div>
+      </div>
+
+      {/* Gamification Widget */}
+      <div className="mt-4">
+        <GamificationWidget userId={user.id} />
       </div>
 
       {/* My Courses */}
