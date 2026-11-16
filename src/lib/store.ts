@@ -123,6 +123,17 @@ export type Book = {
   featured: boolean;
 };
 
+export type Notification = {
+  id: string;
+  userId: string;            // recipient
+  type: string;              // "enrollment", "payment", "certificate", "lesson_complete", "new_course", "new_book", "welcome", "admin"
+  title: string;
+  message: string;
+  link: string;              // URL to navigate to when clicked
+  read: boolean;
+  createdAt: string;
+};
+
 export type DB = {
   users: User[];
   sessions: Session[];
@@ -136,6 +147,7 @@ export type DB = {
   certificates: Certificate[];
   payments: Payment[];
   books: Book[];
+  notifications: Notification[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -154,6 +166,7 @@ const emptyDB = (): DB => ({
   certificates: [],
   payments: [],
   books: [],
+  notifications: [],
 });
 
 let cache: DB | null = null;
@@ -361,4 +374,75 @@ export function incrementBookDownload(id: string): void {
     const book = db.books.find((b) => b.id === id);
     if (book) book.downloads++;
   });
+}
+
+// ---------------------------------------------------------------
+// Notification functions
+// ---------------------------------------------------------------
+
+export function createNotification(data: {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  link?: string;
+}): Notification {
+  const notif: Notification = {
+    id: uid(),
+    userId: data.userId,
+    type: data.type,
+    title: data.title,
+    message: data.message,
+    link: data.link || "",
+    read: false,
+    createdAt: nowISO(),
+  };
+  mutate((db) => { db.notifications.unshift(notif); });
+  return notif;
+}
+
+export function getNotifications(userId: string, limit?: number): Notification[] {
+  const all = readDB().notifications.filter((n) => n.userId === userId);
+  return limit ? all.slice(0, limit) : all;
+}
+
+export function getUnreadCount(userId: string): number {
+  return readDB().notifications.filter((n) => n.userId === userId && !n.read).length;
+}
+
+export function markNotificationRead(id: string): void {
+  mutate((db) => {
+    const n = db.notifications.find((n) => n.id === id);
+    if (n) n.read = true;
+  });
+}
+
+export function markAllNotificationsRead(userId: string): void {
+  mutate((db) => {
+    db.notifications.forEach((n) => {
+      if (n.userId === userId) n.read = true;
+    });
+  });
+}
+
+export function deleteNotification(id: string): void {
+  mutate((db) => {
+    db.notifications = db.notifications.filter((n) => n.id !== id);
+  });
+}
+
+// Notify all admins (used for new enrollments, payments, etc.)
+export function notifyAdmins(title: string, message: string, link: string): void {
+  const admins = readDB().users.filter((u) => u.role === "admin" || u.role === "instructor");
+  for (const admin of admins) {
+    createNotification({ userId: admin.id, type: "admin", title, message, link });
+  }
+}
+
+// Notify all students (used for new courses, new books)
+export function notifyAllStudents(title: string, message: string, link: string): void {
+  const students = readDB().users.filter((u) => u.role === "student");
+  for (const student of students) {
+    createNotification({ userId: student.id, type: "new_course", title, message, link });
+  }
 }
