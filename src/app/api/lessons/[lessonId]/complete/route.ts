@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLesson, hasAccess, markLessonCompleted, getLessonsForCourse, getCompletionPercent } from "@/lib/courses";
-import { readDB, writeDB, getCourseById } from "@/lib/store";
+import { readDB, writeDB, getCourseById, createNotification, generateCertCode, notifyAdmins } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(
@@ -42,6 +42,70 @@ export async function POST(
 
   const totalLessons = getLessonsForCourse(lesson.courseId).length;
   const completion = getCompletionPercent(user.id, lesson.courseId);
+
+  // Lesson complete notification
+  if (completed) {
+    createNotification({
+      userId: user.id,
+      type: "lesson_complete",
+      title: `✅ Lesson completed: ${lesson.title}`,
+      message: `Great progress! You're ${completion}% through "${course.title}".`,
+      link: `/courses/${course.slug}/chapters`,
+    });
+  }
+
+  // Certificate generation on 100% completion
+  if (completion === 100 && completed) {
+    const db = readDB();
+    const existingCert = db.certificates.find(
+      (c) => c.userId === user.id && c.courseId === course.id
+    );
+
+    if (!existingCert) {
+      // Create certificate
+      const cert = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        userId: user.id,
+        courseId: course.id,
+        code: generateCertCode(),
+        issuedAt: new Date().toISOString(),
+      };
+      writeDB({
+        ...db,
+        certificates: [...db.certificates, cert],
+      });
+
+      // Mark enrollment as completed
+      const enr = readDB().enrollments.find(
+        (e) => e.userId === user.id && e.courseId === course.id
+      );
+      if (enr) {
+        const db2 = readDB();
+        db2.enrollments = db2.enrollments.map((e) =>
+          e.id === enr.id
+            ? { ...e, completed: true, completedAt: new Date().toISOString() }
+            : e
+        );
+        writeDB(db2);
+      }
+
+      // Certificate notification
+      createNotification({
+        userId: user.id,
+        type: "certificate",
+        title: `🏅 Certificate earned!`,
+        message: `Congratulations! You completed "${course.title}". Your certificate is ready to view and download.`,
+        link: `/certificates/${cert.code}`,
+      });
+
+      // Notify admins
+      notifyAdmins(
+        "Certificate issued",
+        `${user.name} completed "${course.title}" and earned a certificate (Code: ${cert.code}).`,
+        `/certificates/${cert.code}`
+      );
+    }
+  }
 
   return NextResponse.json({
     ok: true,
