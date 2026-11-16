@@ -198,6 +198,174 @@ export type AuditLog = {
   createdAt: string;
 };
 
+// ---------------------------------------------------------------
+// Enterprise Phase 3: Note-Taking & Bookmarks
+// ---------------------------------------------------------------
+export type Note = {
+  id: string;
+  userId: string;
+  courseId: string;
+  lessonId: string;
+  timestamp: number | null;  // video timestamp in seconds (null for text lessons)
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Bookmark = {
+  id: string;
+  userId: string;
+  courseId: string;
+  lessonId: string;
+  timestamp: number | null;
+  label: string;
+  createdAt: string;
+};
+
+// ---------------------------------------------------------------
+// Enterprise Phase 3: Discussion Threads & Q&A
+// ---------------------------------------------------------------
+export type Discussion = {
+  id: string;
+  courseId: string;
+  lessonId: string | null;    // null = course-level discussion
+  userId: string;
+  title: string;
+  content: string;
+  pinned: boolean;
+  upvotes: string[];          // user IDs who upvoted
+  createdAt: string;
+};
+
+export type Reply = {
+  id: string;
+  discussionId: string;
+  userId: string;
+  content: string;
+  isVerifiedAnswer: boolean;   // instructor marks as verified
+  upvotes: string[];
+  createdAt: string;
+};
+
+// ---------------------------------------------------------------
+// Enterprise Phase 3: Gamification
+// ---------------------------------------------------------------
+export type BadgeType =
+  | "first_course" | "first_quiz" | "first_certificate"
+  | "streak_7" | "streak_30" | "streak_100"
+  | "course_complete" | "quiz_perfect" | "early_adopter"
+  | "five_courses" | "helpful_peer" | "exam_passer";
+
+export type Badge = {
+  id: string;
+  type: BadgeType;
+  name: string;
+  description: string;
+  icon: string;               // emoji
+  color: string;              // tailwind color class
+};
+
+export type UserBadge = {
+  id: string;
+  userId: string;
+  badgeType: BadgeType;
+  awardedAt: string;
+};
+
+export type Streak = {
+  userId: string;
+  currentStreak: number;      // consecutive days
+  longestStreak: number;
+  lastActiveDate: string;     // YYYY-MM-DD
+  totalActiveDays: number;
+};
+
+export type LeaderboardEntry = {
+  userId: string;
+  name: string;
+  avatar: string;
+  points: number;
+  coursesCompleted: number;
+  streak: number;
+  badges: number;
+  optedIn: boolean;
+};
+
+// ---------------------------------------------------------------
+// Enterprise Phase 3: Assignments & Submissions
+// ---------------------------------------------------------------
+export type Assignment = {
+  id: string;
+  courseId: string;
+  lessonId: string | null;
+  title: string;
+  description: string;
+  instructions: string;
+  maxPoints: number;
+  dueDate: string | null;     // ISO date
+  allowedFileTypes: string[];  // e.g. ["pdf", "doc", "zip", "py"]
+  maxFileSizeMB: number;
+  createdAt: string;
+};
+
+export type Submission = {
+  id: string;
+  assignmentId: string;
+  userId: string;
+  fileName: string;
+  fileData: string;           // base64 encoded file content
+  fileType: string;
+  notes: string;              // student notes accompanying submission
+  submittedAt: string;
+  status: "pending" | "graded" | "returned";
+  grade: number | null;       // points awarded
+  feedback: string;           // instructor feedback
+  gradedBy: string | null;
+  gradedAt: string | null;
+};
+
+// ---------------------------------------------------------------
+// Enterprise Phase 3: Promo Codes & Bundles
+// ---------------------------------------------------------------
+export type PromoCode = {
+  id: string;
+  code: string;               // e.g. "WELCOME50"
+  description: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;      // 50 = 50% off, or 500 = KES 500 off
+  maxUses: number;            // 0 = unlimited
+  usedCount: number;
+  expiresAt: string | null;
+  active: boolean;
+  courseId: string | null;    // null = applies to all courses
+  createdAt: string;
+};
+
+export type Bundle = {
+  id: string;
+  title: string;
+  description: string;
+  courseIds: string[];
+  price: number;              // bundle price (less than sum of individual)
+  originalPrice: number;      // sum of individual prices
+  active: boolean;
+  createdAt: string;
+};
+
+// ---------------------------------------------------------------
+// Enterprise Phase 3: Calendar Events
+// ---------------------------------------------------------------
+export type CalendarEvent = {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string;
+  eventType: "exam" | "deadline" | "live_session" | "office_hours";
+  eventDate: string;          // ISO date
+  meetingUrl: string | null;  // Zoom/Meet link for live sessions
+  createdAt: string;
+};
+
 export type DB = {
   users: User[];
   sessions: Session[];
@@ -216,6 +384,18 @@ export type DB = {
   questions: Question[];
   quizAttempts: QuizAttempt[];
   auditLogs: AuditLog[];
+  notes: Note[];
+  bookmarks: Bookmark[];
+  discussions: Discussion[];
+  replies: Reply[];
+  badges: Badge[];
+  userBadges: UserBadge[];
+  streaks: Streak[];
+  assignments: Assignment[];
+  submissions: Submission[];
+  promoCodes: PromoCode[];
+  bundles: Bundle[];
+  calendarEvents: CalendarEvent[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -239,6 +419,18 @@ const emptyDB = (): DB => ({
   questions: [],
   quizAttempts: [],
   auditLogs: [],
+  notes: [],
+  bookmarks: [],
+  discussions: [],
+  replies: [],
+  badges: [],
+  userBadges: [],
+  streaks: [],
+  assignments: [],
+  submissions: [],
+  promoCodes: [],
+  bundles: [],
+  calendarEvents: [],
 });
 
 let cache: DB | null = null;
@@ -298,6 +490,23 @@ function migrateDB(db: DB) {
   if (!db.questions) db.questions = [];
   if (!db.quizAttempts) db.quizAttempts = [];
   if (!db.auditLogs) db.auditLogs = [];
+  // Phase 3 collections
+  if (!db.notes) db.notes = [];
+  if (!db.bookmarks) db.bookmarks = [];
+  if (!db.discussions) db.discussions = [];
+  if (!db.replies) db.replies = [];
+  if (!db.badges) db.badges = [];
+  if (!db.userBadges) db.userBadges = [];
+  if (!db.streaks) db.streaks = [];
+  if (!db.assignments) db.assignments = [];
+  if (!db.submissions) db.submissions = [];
+  if (!db.promoCodes) db.promoCodes = [];
+  if (!db.bundles) db.bundles = [];
+  if (!db.calendarEvents) db.calendarEvents = [];
+  // Seed badges if empty
+  if (db.badges.length === 0) {
+    db.badges = getBadgeDefinitions();
+  }
   for (const cert of db.certificates) {
     if (!cert.hash) {
       cert.hash = crypto
@@ -809,4 +1018,556 @@ export function getPlatformStats() {
     avgQuizScore,
     totalAuditLogs: db.auditLogs.length,
   };
+}
+
+// ===============================================================
+// Enterprise Phase 3: Note-Taking & Bookmarks
+// ===============================================================
+
+export function getNotes(userId: string, courseId: string): Note[] {
+  return readDB().notes
+    .filter((n) => n.userId === userId && n.courseId === courseId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export function getNotesForLesson(userId: string, lessonId: string): Note[] {
+  return readDB().notes
+    .filter((n) => n.userId === userId && n.lessonId === lessonId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export function createNote(data: Omit<Note, "id" | "createdAt" | "updatedAt">): Note {
+  const note: Note = {
+    ...data,
+    id: uid(),
+    createdAt: nowISO(),
+    updatedAt: nowISO(),
+  };
+  mutate((db) => { db.notes.push(note); });
+  return note;
+}
+
+export function updateNote(id: string, content: string): void {
+  mutate((db) => {
+    const n = db.notes.find((n) => n.id === id);
+    if (n) { n.content = content; n.updatedAt = nowISO(); }
+  });
+}
+
+export function deleteNote(id: string): void {
+  mutate((db) => { db.notes = db.notes.filter((n) => n.id !== id); });
+}
+
+export function getBookmarks(userId: string, courseId: string): Bookmark[] {
+  return readDB().bookmarks
+    .filter((b) => b.userId === userId && b.courseId === courseId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export function createBookmark(data: Omit<Bookmark, "id" | "createdAt">): Bookmark {
+  const bm: Bookmark = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.bookmarks.push(bm); });
+  return bm;
+}
+
+export function deleteBookmark(id: string): void {
+  mutate((db) => { db.bookmarks = db.bookmarks.filter((b) => b.id !== id); });
+}
+
+export function buildStudyGuide(userId: string, courseId: string): string {
+  const db = readDB();
+  const course = db.courses.find((c) => c.id === courseId);
+  if (!course) return "Course not found";
+  const notes = getNotes(userId, courseId);
+  const bookmarks = getBookmarks(userId, courseId);
+  let guide = `# Study Guide: ${course.title}\n\n`;
+  guide += `Generated: ${new Date().toLocaleString()}\n`;
+  guide += `Notes: ${notes.length} | Bookmarks: ${bookmarks.length}\n\n---\n\n`;
+  if (notes.length > 0) {
+    guide += `## 📝 My Notes\n\n`;
+    for (const n of notes) {
+      const lesson = db.lessons.find((l) => l.id === n.lessonId);
+      guide += `### ${lesson?.title || "Unknown Lesson"}\n`;
+      if (n.timestamp) guide += `⏱ Timestamp: ${Math.floor(n.timestamp / 60)}:${String(Math.floor(n.timestamp % 60)).padStart(2, "0")}\n`;
+      guide += `${n.content}\n\n`;
+    }
+  }
+  if (bookmarks.length > 0) {
+    guide += `## 🔖 Bookmarks\n\n`;
+    for (const b of bookmarks) {
+      const lesson = db.lessons.find((l) => l.id === b.lessonId);
+      guide += `- **${lesson?.title || "Unknown"}** ${b.timestamp ? `@ ${Math.floor(b.timestamp / 60)}:${String(Math.floor(b.timestamp % 60)).padStart(2, "0")}` : ""}: ${b.label}\n`;
+    }
+  }
+  if (notes.length === 0 && bookmarks.length === 0) {
+    guide += "_No notes or bookmarks yet. Start taking notes in lessons to build your study guide!_\n";
+  }
+  return guide;
+}
+
+// ===============================================================
+// Enterprise Phase 3: Discussion Threads & Q&A
+// ===============================================================
+
+export function getDiscussions(courseId: string, lessonId?: string | null): Discussion[] {
+  return readDB().discussions
+    .filter((d) => {
+      if (d.courseId !== courseId) return false;
+      if (lessonId !== undefined) return d.lessonId === lessonId;
+      return true;
+    })
+    .sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return b.upvotes.length - a.upvotes.length;
+    });
+}
+
+export function getDiscussionById(id: string): Discussion | undefined {
+  return readDB().discussions.find((d) => d.id === id);
+}
+
+export function createDiscussion(data: Omit<Discussion, "id" | "createdAt" | "upvotes" | "pinned">): Discussion {
+  const disc: Discussion = {
+    ...data,
+    id: uid(),
+    pinned: false,
+    upvotes: [],
+    createdAt: nowISO(),
+  };
+  mutate((db) => { db.discussions.push(disc); });
+  return disc;
+}
+
+export function toggleDiscussionUpvote(discussionId: string, userId: string): void {
+  mutate((db) => {
+    const d = db.discussions.find((d) => d.id === discussionId);
+    if (d) {
+      const idx = d.upvotes.indexOf(userId);
+      if (idx >= 0) d.upvotes = d.upvotes.filter((u) => u !== userId);
+      else d.upvotes.push(userId);
+    }
+  });
+}
+
+export function togglePinDiscussion(discussionId: string): void {
+  mutate((db) => {
+    const d = db.discussions.find((d) => d.id === discussionId);
+    if (d) d.pinned = !d.pinned;
+  });
+}
+
+export function getReplies(discussionId: string): Reply[] {
+  return readDB().replies
+    .filter((r) => r.discussionId === discussionId)
+    .sort((a, b) => {
+      if (a.isVerifiedAnswer && !b.isVerifiedAnswer) return -1;
+      if (!a.isVerifiedAnswer && b.isVerifiedAnswer) return 1;
+      return a.createdAt.localeCompare(b.createdAt);
+    });
+}
+
+export function createReply(data: Omit<Reply, "id" | "createdAt" | "upvotes" | "isVerifiedAnswer">): Reply {
+  const reply: Reply = {
+    ...data,
+    id: uid(),
+    isVerifiedAnswer: false,
+    upvotes: [],
+    createdAt: nowISO(),
+  };
+  mutate((db) => { db.replies.push(reply); });
+  return reply;
+}
+
+export function toggleReplyUpvote(replyId: string, userId: string): void {
+  mutate((db) => {
+    const r = db.replies.find((r) => r.id === replyId);
+    if (r) {
+      const idx = r.upvotes.indexOf(userId);
+      if (idx >= 0) r.upvotes = r.upvotes.filter((u) => u !== userId);
+      else r.upvotes.push(userId);
+    }
+  });
+}
+
+export function toggleVerifiedAnswer(replyId: string): void {
+  mutate((db) => {
+    const r = db.replies.find((r) => r.id === replyId);
+    if (r) r.isVerifiedAnswer = !r.isVerifiedAnswer;
+  });
+}
+
+// ===============================================================
+// Enterprise Phase 3: Gamification
+// ===============================================================
+
+export function getBadgeDefinitions(): Badge[] {
+  return [
+    { id: uid(), type: "first_course", name: "First Steps", description: "Enrolled in your first course", icon: "🎯", color: "bg-blue-100 text-blue-700" },
+    { id: uid(), type: "first_quiz", name: "Quiz Rookie", description: "Completed your first quiz", icon: "❓", color: "bg-purple-100 text-purple-700" },
+    { id: uid(), type: "first_certificate", name: "Certified", description: "Earned your first certificate", icon: "🏅", color: "bg-yellow-100 text-yellow-700" },
+    { id: uid(), type: "streak_7", name: "Week Warrior", description: "7-day learning streak", icon: "🔥", color: "bg-orange-100 text-orange-700" },
+    { id: uid(), type: "streak_30", name: "Monthly Master", description: "30-day learning streak", icon: "⚡", color: "bg-red-100 text-red-700" },
+    { id: uid(), type: "streak_100", name: "Centurion", description: "100-day learning streak", icon: "💯", color: "bg-pink-100 text-pink-700" },
+    { id: uid(), type: "course_complete", name: "Course Crusher", description: "Completed a full course", icon: "🎓", color: "bg-green-100 text-green-700" },
+    { id: uid(), type: "quiz_perfect", name: "Perfect Score", description: "Got 100% on a quiz", icon: "⭐", color: "bg-indigo-100 text-indigo-700" },
+    { id: uid(), type: "early_adopter", name: "Early Adopter", description: "Joined TechPath Academy early", icon: "🚀", color: "bg-cyan-100 text-cyan-700" },
+    { id: uid(), type: "five_courses", name: "Knowledge Seeker", description: "Enrolled in 5+ courses", icon: "📚", color: "bg-teal-100 text-teal-700" },
+    { id: uid(), type: "exam_passer", name: "Exam Conqueror", description: "Passed a final exam", icon: "🏆", color: "bg-amber-100 text-amber-700" },
+    { id: uid(), type: "helpful_peer", name: "Helpful Peer", description: "Posted a verified answer in discussions", icon: "🤝", color: "bg-violet-100 text-violet-700" },
+  ];
+}
+
+export function getUserBadges(userId: string): UserBadge[] {
+  return readDB().userBadges.filter((b) => b.userId === userId);
+}
+
+export function hasBadge(userId: string, badgeType: BadgeType): boolean {
+  return readDB().userBadges.some((b) => b.userId === userId && b.badgeType === badgeType);
+}
+
+export function awardBadge(userId: string, badgeType: BadgeType): void {
+  if (hasBadge(userId, badgeType)) return;
+  const badge = readDB().badges.find((b) => b.type === badgeType);
+  if (!badge) return;
+  const ub: UserBadge = { id: uid(), userId, badgeType, awardedAt: nowISO() };
+  mutate((db) => { db.userBadges.push(ub); });
+  createNotification({
+    userId,
+    type: "admin",
+    title: "Badge Earned! 🏅",
+    message: `You earned the "${badge.name}" badge: ${badge.description}`,
+    link: "/dashboard",
+  });
+}
+
+export function getStreak(userId: string): Streak {
+  const existing = readDB().streaks.find((s) => s.userId === userId);
+  if (existing) return existing;
+  const newStreak: Streak = {
+    userId,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastActiveDate: "",
+    totalActiveDays: 0,
+  };
+  return newStreak;
+}
+
+export function updateStreak(userId: string): Streak {
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  let streak = readDB().streaks.find((s) => s.userId === userId);
+  if (!streak) {
+    streak = { userId, currentStreak: 0, longestStreak: 0, lastActiveDate: "", totalActiveDays: 0 };
+    mutate((db) => { db.streaks.push(streak!); });
+  }
+  if (streak.lastActiveDate === today) return streak;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  if (streak.lastActiveDate === yesterday) {
+    streak.currentStreak += 1;
+  } else if (streak.lastActiveDate === "") {
+    streak.currentStreak = 1;
+  } else {
+    streak.currentStreak = 1; // reset
+  }
+  streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
+  streak.totalActiveDays += 1;
+  streak.lastActiveDate = today;
+  mutate((db) => {
+    const s = db.streaks.find((s) => s.userId === userId);
+    if (s) Object.assign(s, streak);
+  });
+  // Award streak badges
+  if (streak.currentStreak === 7) awardBadge(userId, "streak_7");
+  if (streak.currentStreak === 30) awardBadge(userId, "streak_30");
+  if (streak.currentStreak === 100) awardBadge(userId, "streak_100");
+  return streak;
+}
+
+export function getLeaderboard(limit: number = 20): LeaderboardEntry[] {
+  const db = readDB();
+  const students = db.users.filter((u) => u.role === "student" || u.role === "instructor");
+  return students.map((u) => {
+    const enrollments = db.enrollments.filter((e) => e.userId === u.id && e.completed);
+    const streak = db.streaks.find((s) => s.userId === u.id);
+    const badges = db.userBadges.filter((b) => b.userId === u.id);
+    const certs = db.certificates.filter((c) => c.userId === u.id);
+    // Points: 10 per completed course, 5 per cert, 5 per badge, 1 per streak day
+    const points = enrollments.length * 10 + certs.length * 5 + badges.length * 5 + (streak?.currentStreak || 0);
+    return {
+      userId: u.id,
+      name: u.name,
+      avatar: u.avatar || "",
+      points,
+      coursesCompleted: enrollments.length,
+      streak: streak?.currentStreak || 0,
+      badges: badges.length,
+      optedIn: true,
+    };
+  }).sort((a, b) => b.points - a.points).slice(0, limit);
+}
+
+// ===============================================================
+// Enterprise Phase 3: Assignments & Submissions
+// ===============================================================
+
+export function getAssignments(courseId: string): Assignment[] {
+  return readDB().assignments
+    .filter((a) => a.courseId === courseId)
+    .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
+}
+
+export function getAssignmentById(id: string): Assignment | undefined {
+  return readDB().assignments.find((a) => a.id === id);
+}
+
+export function createAssignment(data: Omit<Assignment, "id" | "createdAt">): Assignment {
+  const a: Assignment = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.assignments.push(a); });
+  return a;
+}
+
+export function deleteAssignment(id: string): void {
+  mutate((db) => {
+    db.assignments = db.assignments.filter((a) => a.id !== id);
+    db.submissions = db.submissions.filter((s) => s.assignmentId !== id);
+  });
+}
+
+export function getSubmissions(assignmentId: string): Submission[] {
+  return readDB().submissions
+    .filter((s) => s.assignmentId === assignmentId)
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+}
+
+export function getSubmissionsByUser(userId: string): Submission[] {
+  return readDB().submissions
+    .filter((s) => s.userId === userId)
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+}
+
+export function createSubmission(data: Omit<Submission, "id" | "submittedAt" | "status" | "grade" | "feedback" | "gradedBy" | "gradedAt">): Submission {
+  const s: Submission = {
+    ...data,
+    id: uid(),
+    submittedAt: nowISO(),
+    status: "pending",
+    grade: null,
+    feedback: "",
+    gradedBy: null,
+    gradedAt: null,
+  };
+  mutate((db) => { db.submissions.push(s); });
+  return s;
+}
+
+export function gradeSubmission(id: string, grade: number, feedback: string, gradedBy: string): void {
+  mutate((db) => {
+    const s = db.submissions.find((s) => s.id === id);
+    if (s) {
+      s.grade = grade;
+      s.feedback = feedback;
+      s.gradedBy = gradedBy;
+      s.gradedAt = nowISO();
+      s.status = "graded";
+    }
+  });
+}
+
+export function getPendingSubmissions(): Submission[] {
+  return readDB().submissions.filter((s) => s.status === "pending");
+}
+
+// ===============================================================
+// Enterprise Phase 3: Promo Codes
+// ===============================================================
+
+export function getPromoCodes(): PromoCode[] {
+  return readDB().promoCodes.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getPromoCode(code: string): PromoCode | undefined {
+  return readDB().promoCodes.find((p) => p.code === code.toUpperCase() && p.active);
+}
+
+export function validatePromoCode(code: string, courseId: string, price: number): { valid: boolean; discount: number; message: string } {
+  const promo = getPromoCode(code);
+  if (!promo) return { valid: false, discount: 0, message: "Invalid promo code" };
+  if (promo.expiresAt && promo.expiresAt < nowISO()) return { valid: false, discount: 0, message: "Promo code expired" };
+  if (promo.maxUses > 0 && promo.usedCount >= promo.maxUses) return { valid: false, discount: 0, message: "Promo code usage limit reached" };
+  if (promo.courseId && promo.courseId !== courseId) return { valid: false, discount: 0, message: "Promo code not valid for this course" };
+  const discount = promo.discountType === "percentage"
+    ? Math.round(price * promo.discountValue / 100)
+    : Math.min(promo.discountValue, price);
+  return { valid: true, discount, message: `${promo.discountType === "percentage" ? promo.discountValue + "%" : "KES " + promo.discountValue} off applied!` };
+}
+
+export function createPromoCode(data: Omit<PromoCode, "id" | "createdAt" | "usedCount">): PromoCode {
+  const p: PromoCode = { ...data, id: uid(), usedCount: 0, createdAt: nowISO() };
+  mutate((db) => { db.promoCodes.push(p); });
+  return p;
+}
+
+export function incrementPromoUsage(code: string): void {
+  mutate((db) => {
+    const p = db.promoCodes.find((p) => p.code === code.toUpperCase());
+    if (p) p.usedCount += 1;
+  });
+}
+
+// ===============================================================
+// Enterprise Phase 3: Search
+// ===============================================================
+
+export function searchCourses(query: string, filters?: { category?: string; level?: string; maxPrice?: number; freeOnly?: boolean }): Course[] {
+  const db = readDB();
+  const q = query.toLowerCase().trim();
+  return db.courses.filter((c) => {
+    if (!c.published) return false;
+    if (filters?.category && c.categoryId !== filters.category) return false;
+    if (filters?.level && c.level !== filters.level) return false;
+    if (filters?.freeOnly && c.price > 0) return false;
+    if (filters?.maxPrice !== undefined && c.price > filters.maxPrice) return false;
+    if (q) {
+      const instructor = db.users.find((u) => u.id === c.instructorId);
+      const searchText = `${c.title} ${c.description} ${instructor?.name || ""} ${instructor?.title || ""}`.toLowerCase();
+      if (!searchText.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// ===============================================================
+// Enterprise Phase 3: Instructor Analytics
+// ===============================================================
+
+export function getCourseAnalytics(courseId: string) {
+  const db = readDB();
+  const lessons = getLessonsForCourse(courseId);
+  const enrollments = db.enrollments.filter((e) => e.courseId === courseId);
+  const enrolledUserIds = enrollments.map((e) => e.userId);
+
+  // Per-lesson completion stats
+  const lessonStats = lessons.map((lesson) => {
+    const completed = db.progress.filter((p) => p.lessonId === lesson.id && enrolledUserIds.includes(p.userId));
+    const completionRate = enrolledUserIds.length > 0 ? Math.round((completed.length / enrolledUserIds.length) * 100) : 0;
+    return {
+      lessonId: lesson.id,
+      title: lesson.title,
+      type: lesson.type,
+      enrolled: enrolledUserIds.length,
+      completed: completed.length,
+      completionRate,
+      dropOff: enrolledUserIds.length - completed.length,
+    };
+  });
+
+  // Quiz stats
+  const courseQuizzes = db.quizzes.filter((q) => q.courseId === courseId);
+  const quizStats = courseQuizzes.map((quiz) => {
+    const attempts = db.quizAttempts.filter((a) => a.quizId === quiz.id);
+    const passed = attempts.filter((a) => a.passed);
+    const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
+    return {
+      quizId: quiz.id,
+      title: quiz.title,
+      isFinalExam: quiz.isFinalExam,
+      totalAttempts: attempts.length,
+      passed: passed.length,
+      passRate: attempts.length > 0 ? Math.round((passed.length / attempts.length) * 100) : 0,
+      avgScore,
+    };
+  });
+
+  // Assignment stats
+  const assignments = db.assignments.filter((a) => a.courseId === courseId);
+  const assignmentStats = assignments.map((a) => {
+    const subs = db.submissions.filter((s) => s.assignmentId === a.id);
+    return {
+      assignmentId: a.id,
+      title: a.title,
+      totalSubmissions: subs.length,
+      pending: subs.filter((s) => s.status === "pending").length,
+      graded: subs.filter((s) => s.status === "graded").length,
+    };
+  });
+
+  return {
+    totalEnrolled: enrollments.length,
+    totalCompleted: enrollments.filter((e) => e.completed).length,
+    completionRate: enrollments.length > 0 ? Math.round((enrollments.filter((e) => e.completed).length / enrollments.length) * 100) : 0,
+    totalLessons: lessons.length,
+    lessonStats,
+    quizStats,
+    assignmentStats,
+    revenue: db.payments.filter((p) => p.courseId === courseId && p.status === "paid").reduce((s, p) => s + p.amount, 0),
+  };
+}
+
+// ===============================================================
+// Enterprise Phase 3: Calendar Events
+// ===============================================================
+
+export function getCalendarEvents(courseId: string): CalendarEvent[] {
+  return readDB().calendarEvents
+    .filter((e) => e.courseId === courseId)
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+}
+
+export function createCalendarEvent(data: Omit<CalendarEvent, "id" | "createdAt">): CalendarEvent {
+  const e: CalendarEvent = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.calendarEvents.push(e); });
+  return e;
+}
+
+export function generateICS(event: { title: string; description: string; date: string; url?: string }): string {
+  const dt = new Date(event.date);
+  const dtStart = dt.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const dtEnd = new Date(dt.getTime() + 3600000).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//TechPath Academy//LMS//EN",
+    "BEGIN:VEVENT",
+    `UID:${uid()}@techpath.academy`,
+    `DTSTAMP:${dtStart}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${event.title}`,
+    `DESCRIPTION:${event.description}`,
+    event.url ? `URL:${event.url}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].filter(Boolean).join("\r\n");
+}
+
+// ===============================================================
+// Enterprise Phase 3: User Management (Admin)
+// ===============================================================
+
+export function getAllUsers(): User[] {
+  return readDB().users.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function updateUserRole(userId: string, role: Role): void {
+  mutate((db) => {
+    const u = db.users.find((u) => u.id === userId);
+    if (u) u.role = role;
+  });
+}
+
+export function deleteUser(userId: string): void {
+  mutate((db) => {
+    db.users = db.users.filter((u) => u.id !== userId);
+    db.sessions = db.sessions.filter((s) => s.userId !== userId);
+    db.enrollments = db.enrollments.filter((e) => e.userId !== userId);
+    db.progress = db.progress.filter((p) => p.userId !== userId);
+    db.certificates = db.certificates.filter((c) => c.userId !== userId);
+    db.notifications = db.notifications.filter((n) => n.userId !== userId);
+    db.notes = db.notes.filter((n) => n.userId !== userId);
+    db.bookmarks = db.bookmarks.filter((b) => b.userId !== userId);
+    db.userBadges = db.userBadges.filter((b) => b.userId !== userId);
+    db.streaks = db.streaks.filter((s) => s.userId !== userId);
+    db.submissions = db.submissions.filter((s) => s.userId !== userId);
+  });
 }
