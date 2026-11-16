@@ -18,6 +18,7 @@ import { getCurrentUser } from "@/lib/auth";
 import CompleteButton from "@/components/CompleteButton";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
 import InteractiveVideoPlayer from "@/components/InteractiveVideoPlayer";
+import AITutor from "@/components/AITutor";
 import { getYouTubeEmbed } from "@/lib/video";
 
 export const revalidate = 0;
@@ -242,6 +243,9 @@ export default async function LessonPage({
           </div>
         </div>
       </div>
+
+      {/* AI Tutor — floating chat widget */}
+      {user && <AITutor courseId={course.id} courseTitle={course.title} lessonTitle={lesson.title} />}
     </div>
   );
 }
