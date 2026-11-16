@@ -54,12 +54,20 @@ export default async function AdminPage() {
               : "Manage your courses and training content."}
           </p>
         </div>
-        <Link
-          href="/admin/new"
-          className="rounded-xl bg-indigo-600 px-5 py-2.5 font-semibold text-white transition hover:bg-indigo-700"
-        >
-          + New Course
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/books"
+            className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            📚 Manage Books
+          </Link>
+          <Link
+            href="/admin/new"
+            className="rounded-xl bg-indigo-600 px-5 py-2.5 font-semibold text-white transition hover:bg-indigo-700"
+          >
+            + New Course
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
