@@ -19,6 +19,8 @@ import CompleteButton from "@/components/CompleteButton";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
 import InteractiveVideoPlayer from "@/components/InteractiveVideoPlayer";
 import AITutor from "@/components/AITutor";
+import LessonNotes from "@/components/LessonNotes";
+import DiscussionPanel from "@/components/DiscussionPanel";
 import { getYouTubeEmbed } from "@/lib/video";
 
 export const revalidate = 0;
@@ -150,9 +152,17 @@ export default async function LessonPage({
                 </Link>
               )}
             </div>
-          </div>
 
-          {/* Sidebar: course curriculum */}
+            {/* Lesson Notes */}
+            <div className="mt-8">
+              <LessonNotes userId={user.id} courseId={course.id} lessonId={lesson.id} />
+            </div>
+
+            {/* Discussion */}
+            <div className="mt-6">
+              <DiscussionPanel courseId={course.id} lessonId={lesson.id} userId={user.id} userRole={user.role} userName={user.name} />
+            </div>
+          </div>
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               {/* Progress */}
