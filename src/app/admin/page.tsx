@@ -81,6 +81,28 @@ export default async function AdminPage() {
           >
             📋 Final Exam Builder
           </Link>
+          {user.role === "admin" && (
+            <>
+              <Link
+                href="/admin/users"
+                className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                👥 Users
+              </Link>
+              <Link
+                href="/admin/grading"
+                className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                📝 Grading
+              </Link>
+              <Link
+                href="/admin/analytics"
+                className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                📊 Analytics
+              </Link>
+            </>
+          )}
           <Link
             href="/admin/new"
             className="rounded-xl bg-indigo-600 px-5 py-2.5 font-semibold text-white transition hover:bg-indigo-700"
