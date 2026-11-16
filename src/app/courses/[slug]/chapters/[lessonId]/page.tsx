@@ -16,6 +16,7 @@ import {
 } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 import CompleteButton from "@/components/CompleteButton";
+import QuizPlayer from "@/components/quiz/QuizPlayer";
 import { getYouTubeEmbed } from "@/lib/video";
 
 export const revalidate = 0;
@@ -86,29 +87,42 @@ export default async function LessonPage({
 
             <h1 className="mt-2 text-2xl font-bold text-slate-900">{lesson.title}</h1>
 
-            {/* Video player */}
-            <div className="mt-4 overflow-hidden rounded-2xl bg-black shadow-lg">
-              {embed ? (
-                <iframe
-                  className="aspect-video w-full"
-                  src={embed}
-                  title={lesson.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+            {/* Quiz or Video player */}
+            {lesson.type === "quiz" ? (
+              <div className="mt-4 rounded-2xl bg-white p-6 shadow-sm">
+                <QuizPlayer
+                  lessonId={lesson.id}
+                  courseId={course.id}
+                  lessonTitle={lesson.title}
+                  userRole={user.role}
                 />
-              ) : (
-                <div className="flex aspect-video w-full items-center justify-center bg-slate-900 text-slate-400">
-                  {lesson.type === "video" ? "No video URL set" : "📝 Text lesson — scroll down to read"}
+              </div>
+            ) : (
+              <>
+                <div className="mt-4 overflow-hidden rounded-2xl bg-black shadow-lg">
+                  {embed ? (
+                    <iframe
+                      className="aspect-video w-full"
+                      src={embed}
+                      title={lesson.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="flex aspect-video w-full items-center justify-center bg-slate-900 text-slate-400">
+                      {lesson.type === "video" ? "No video URL set" : "📝 Text lesson — scroll down to read"}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Content */}
-            {html && (
-              <article
-                className="lesson-content mt-8 rounded-2xl bg-white p-6 shadow-sm"
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
+                {/* Content */}
+                {html && (
+                  <article
+                    className="lesson-content mt-8 rounded-2xl bg-white p-6 shadow-sm"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                  />
+                )}
+              </>
             )}
 
             {/* Navigation + Complete */}
