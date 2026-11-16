@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import {
   getQuizByLessonId,
+  getFinalExamForCourse,
   getQuestionsForQuiz,
   createQuiz,
   createQuestion,
@@ -10,14 +11,25 @@ import {
 } from "@/lib/store";
 
 // GET /api/quizzes?lessonId=xxx — get quiz + questions for a lesson
+// GET /api/quizzes?courseId=xxx&finalExam=1 — get final exam for a course
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const lessonId = req.nextUrl.searchParams.get("lessonId");
-  if (!lessonId) return NextResponse.json({ error: "lessonId required" }, { status: 400 });
+  const courseId = req.nextUrl.searchParams.get("courseId");
+  const isFinalExam = req.nextUrl.searchParams.get("finalExam") === "1";
 
-  const quiz = getQuizByLessonId(lessonId);
+  let quiz = null;
+
+  if (isFinalExam && courseId) {
+    quiz = getFinalExamForCourse(courseId);
+  } else if (lessonId) {
+    quiz = getQuizByLessonId(lessonId);
+  } else {
+    return NextResponse.json({ error: "lessonId or courseId required" }, { status: 400 });
+  }
+
   if (!quiz) return NextResponse.json({ quiz: null, questions: [] });
 
   let questions = getQuestionsForQuiz(quiz.id);
@@ -44,21 +56,32 @@ export async function POST(req: NextRequest) {
   const {
     lessonId, courseId, title, description,
     passingScore = 70, maxAttempts = 3, shuffleQuestions = false, timeLimit = 0,
+    isFinalExam = false,
     questions = [], replaceExisting = true,
   } = body;
 
-  if (!lessonId || !courseId || !title) {
-    return NextResponse.json({ error: "lessonId, courseId, title required" }, { status: 400 });
+  if (!courseId || !title) {
+    return NextResponse.json({ error: "courseId, title required" }, { status: 400 });
+  }
+  // lessonId is required for lesson quizzes, null for final exams
+  if (!isFinalExam && !lessonId) {
+    return NextResponse.json({ error: "lessonId required (or set isFinalExam=true)" }, { status: 400 });
   }
 
-  if (replaceExisting) {
+  // For final exams, replace existing final exam for this course
+  if (isFinalExam && replaceExisting) {
+    const existing = getFinalExamForCourse(courseId);
+    if (existing) deleteQuiz(existing.id);
+  } else if (lessonId && replaceExisting) {
     const existing = getQuizByLessonId(lessonId);
     if (existing) deleteQuiz(existing.id);
   }
 
   const quiz = createQuiz({
-    lessonId, courseId, title, description: description || "",
+    lessonId: isFinalExam ? null : lessonId,
+    courseId, title, description: description || "",
     passingScore, maxAttempts, shuffleQuestions, timeLimit,
+    isFinalExam,
   });
 
   for (let i = 0; i < questions.length; i++) {
@@ -72,9 +95,10 @@ export async function POST(req: NextRequest) {
   }
 
   createAuditLog({
-    userId: user.id, userName: user.name, action: "CREATE_QUIZ",
+    userId: user.id, userName: user.name,
+    action: isFinalExam ? "CREATE_FINAL_EXAM" : "CREATE_QUIZ",
     entity: "quiz", entityId: quiz.id,
-    details: `Created quiz "${title}" with ${questions.length} questions`,
+    details: `${isFinalExam ? "Final exam" : "Quiz"} "${title}" with ${questions.length} questions`,
   });
 
   return NextResponse.json({ quiz, questionCount: questions.length });
