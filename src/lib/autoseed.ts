@@ -6,10 +6,14 @@ import { CATEGORIES } from "@/lib/categories";
 import bcrypt from "bcryptjs";
 
 export function autoSeed() {
-  const db = readDB();
-  if (db.courses.length > 0) return; // already seeded
+  try {
+    const db = readDB();
+    if (db.courses.length > 0) {
+      console.log("[autoseed] Database already has courses — skipping seed.");
+      return;
+    }
 
-  console.log("[autoseed] Database is empty — seeding sample data...");
+    console.log("[autoseed] Database is empty — seeding sample data...");
 
   // 1. Seed categories
   mutate((d) => {
@@ -136,4 +140,7 @@ export function autoSeed() {
   });
 
   console.log("[autoseed] Done! 6 courses, 7 categories, reviews created.");
+  } catch (err) {
+    console.error("[autoseed] Error during seeding (non-fatal):", err);
+  }
 }
