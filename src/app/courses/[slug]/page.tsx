@@ -21,6 +21,7 @@ import {
 } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 import { buildCourseCardData } from "@/lib/courseData";
+import AITutor from "@/components/AITutor";
 
 export const revalidate = 0;
 
@@ -377,6 +378,9 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           </div>
         </div>
       </div>
+
+      {/* AI Tutor — floating chat widget */}
+      {user && access && <AITutor courseId={course.id} courseTitle={course.title} />}
     </div>
   );
 }
