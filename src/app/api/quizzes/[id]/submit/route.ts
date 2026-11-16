@@ -6,7 +6,10 @@ import {
   getQuizAttempts,
   createQuizAttempt,
   createAuditLog,
+  createNotification,
 } from "@/lib/store";
+import { getCourseById } from "@/lib/courses";
+import { issueCertificate } from "@/lib/courses";
 
 // POST /api/quizzes/[id]/submit — auto-grade quiz submission
 export async function POST(
@@ -82,6 +85,37 @@ export async function POST(
     });
   }
 
+  // ---- Final exam passed → auto-issue certificate ----
+  let certificateIssued = false;
+  if (quiz.isFinalExam && passed) {
+    const course = getCourseById(quiz.courseId);
+    if (course) {
+      try {
+        const cert = issueCertificate(user.id, quiz.courseId);
+        if (cert) {
+          certificateIssued = true;
+          createNotification({
+            userId: user.id,
+            type: "certificate",
+            title: "🏅 Certificate Earned!",
+            message: `Congratulations! You passed the final exam for "${course.title}" and earned your certificate.`,
+            link: `/certificates/${cert.code}`,
+          });
+          createAuditLog({
+            userId: user.id,
+            userName: user.name,
+            action: "CERTIFICATE_ISSUED",
+            entity: "certificate",
+            entityId: cert.id,
+            details: `Certificate issued via final exam pass (${score}%) for "${course.title}"`,
+          });
+        }
+      } catch (e) {
+        // Certificate may already exist — that's fine
+      }
+    }
+  }
+
   return NextResponse.json({
     attemptId: attempt.id,
     score,
@@ -97,5 +131,7 @@ export async function POST(
     })),
     attemptsRemaining:
       quiz.maxAttempts > 0 ? quiz.maxAttempts - attempts.length - 1 : -1,
+    certificateIssued,
+    isFinalExam: quiz.isFinalExam,
   });
 }
