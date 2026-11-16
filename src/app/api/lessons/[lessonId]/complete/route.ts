@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLesson, hasAccess, markLessonCompleted, getLessonsForCourse, getCompletionPercent } from "@/lib/courses";
-import { readDB, writeDB, getCourseById, createNotification, generateCertCode, notifyAdmins } from "@/lib/store";
+import { readDB, writeDB, getCourseById, createNotification, generateCertCode, generateCertHash, notifyAdmins, uid, nowISO } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(
@@ -62,13 +62,30 @@ export async function POST(
     );
 
     if (!existingCert) {
-      // Create certificate
+      // Create enhanced certificate with hash + skills
+      const certCode = generateCertCode();
+      const issuedAt = new Date().toISOString();
+      const certHash = generateCertHash(certCode, user.id, course.id, issuedAt);
+      // Derive skills from course category + level
+      const categoryMap: Record<string, string[]> = {
+        "cat-it-support": ["Hardware Troubleshooting", "Operating Systems", "Customer Service"],
+        "cat-networking": ["Network Configuration", "Routing & Switching", "TCP/IP"],
+        "cat-database": ["SQL", "Database Design", "Data Management"],
+        "cat-cyber-security": ["Security Fundamentals", "Threat Analysis", "Risk Management"],
+        "cat-ethical-hacking": ["Penetration Testing", "Vulnerability Assessment", "Network Security"],
+        "cat-ai": ["Machine Learning", "AI Fundamentals", "Data Analysis"],
+      };
+      const skills = categoryMap[course.categoryId] || [course.level, "Professional Skills"];
+
       const cert = {
-        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        id: uid(),
         userId: user.id,
         courseId: course.id,
-        code: generateCertCode(),
-        issuedAt: new Date().toISOString(),
+        code: certCode,
+        hash: certHash,
+        skills,
+        issuedAt,
+        expiresAt: null, // No expiry by default
       };
       writeDB({
         ...db,
