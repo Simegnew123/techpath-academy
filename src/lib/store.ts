@@ -108,6 +108,21 @@ export type Payment = {
   createdAt: string;
 };
 
+export type Book = {
+  id: string;
+  title: string;
+  author: string;
+  description: string;
+  category: string;          // e.g. "Networking", "Programming", "Self-Help"
+  fileType: string;          // "pdf", "epub", "doc", "link"
+  fileUrl: string;           // download link or external URL
+  coverImage: string;        // optional cover image URL
+  uploadedBy: string;        // user id
+  uploadedAt: string;
+  downloads: number;
+  featured: boolean;
+};
+
 export type DB = {
   users: User[];
   sessions: Session[];
@@ -120,6 +135,7 @@ export type DB = {
   reviews: Review[];
   certificates: Certificate[];
   payments: Payment[];
+  books: Book[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -137,6 +153,7 @@ const emptyDB = (): DB => ({
   reviews: [],
   certificates: [],
   payments: [],
+  books: [],
 });
 
 let cache: DB | null = null;
@@ -301,4 +318,47 @@ export function generateCertCode(): string {
   code += "-";
   for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
+}
+
+// ---------------------------------------------------------------
+// Book Catalog functions
+// ---------------------------------------------------------------
+
+export function getAllBooks(): Book[] {
+  return readDB().books.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+}
+
+export function getBookById(id: string): Book | undefined {
+  return readDB().books.find((b) => b.id === id);
+}
+
+export function createBook(data: Omit<Book, "id" | "uploadedAt" | "downloads">): Book {
+  const book: Book = {
+    ...data,
+    id: uid(),
+    uploadedAt: nowISO(),
+    downloads: 0,
+  };
+  mutate((db) => { db.books.push(book); });
+  return book;
+}
+
+export function updateBook(id: string, updates: Partial<Book>): void {
+  mutate((db) => {
+    const book = db.books.find((b) => b.id === id);
+    if (book) Object.assign(book, updates);
+  });
+}
+
+export function deleteBook(id: string): void {
+  mutate((db) => {
+    db.books = db.books.filter((b) => b.id !== id);
+  });
+}
+
+export function incrementBookDownload(id: string): void {
+  mutate((db) => {
+    const book = db.books.find((b) => b.id === id);
+    if (book) book.downloads++;
+  });
 }
