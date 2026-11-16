@@ -76,6 +76,12 @@ export default async function AdminPage() {
             📚 Manage Books
           </Link>
           <Link
+            href="/admin/exam"
+            className="rounded-xl border border-amber-300 bg-amber-50 px-5 py-2.5 font-semibold text-amber-700 transition hover:bg-amber-100"
+          >
+            📋 Final Exam Builder
+          </Link>
+          <Link
             href="/admin/new"
             className="rounded-xl bg-indigo-600 px-5 py-2.5 font-semibold text-white transition hover:bg-indigo-700"
           >
