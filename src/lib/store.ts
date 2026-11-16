@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 // ---------------------------------------------------------------
 // Simple JSON file database — data lives in ./data/db.json
@@ -7,7 +8,7 @@ import path from "path";
 // Schema based on LMS Database Schema ERD.
 // ---------------------------------------------------------------
 
-export type Role = "student" | "instructor" | "admin";
+export type Role = "student" | "instructor" | "admin" | "teaching_assistant" | "auditor";
 
 export type User = {
   id: string;
@@ -94,7 +95,10 @@ export type Certificate = {
   userId: string;
   courseId: string;
   code: string;            // verification code
+  hash: string;            // SHA-256 cryptographic hash for verification
+  skills: string[];        // skills mastered (for verifiable credentials)
   issuedAt: string;
+  expiresAt: string | null; // null = never expires; ISO date for recertification
 };
 
 export type Payment = {
@@ -134,6 +138,65 @@ export type Notification = {
   createdAt: string;
 };
 
+// ---------------------------------------------------------------
+// Enterprise: Quiz & Assessment System
+// ---------------------------------------------------------------
+
+export type QuestionType = "mcq" | "true_false" | "short_answer";
+
+export type Question = {
+  id: string;
+  quizId: string;
+  text: string;
+  type: QuestionType;
+  options: string[];           // for mcq: ["Red", "Blue", ...]; for true_false: ["True", "False"]
+  correctAnswer: string;       // for mcq/true_false: the exact option text; for short_answer: model answer
+  explanation: string;         // shown after answering
+  points: number;              // default 1
+  order: number;
+};
+
+export type Quiz = {
+  id: string;
+  lessonId: string;            // FK -> lessons.id (quiz-type lesson)
+  courseId: string;            // denormalized
+  title: string;
+  description: string;
+  passingScore: number;        // percentage 0-100
+  maxAttempts: number;         // 0 = unlimited
+  shuffleQuestions: boolean;
+  timeLimit: number;           // minutes, 0 = no limit
+  createdAt: string;
+};
+
+export type QuizAttempt = {
+  id: string;
+  quizId: string;
+  userId: string;
+  answers: { questionId: string; answer: string; correct: boolean }[];
+  score: number;               // percentage 0-100
+  passed: boolean;
+  timeTakenSec: number;
+  violations: number;          // anti-cheating: tab switches, copy attempts
+  createdAt: string;
+};
+
+// ---------------------------------------------------------------
+// Enterprise: Audit Logs
+// ---------------------------------------------------------------
+
+export type AuditLog = {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;              // "LOGIN", "CREATE_COURSE", "EDIT_COURSE", "DELETE_COURSE", "VERIFY_PAYMENT", "ADD_BOOK", "DELETE_BOOK", "ROLE_CHANGE", "EXPORT_DATA"
+  entity: string;              // "course", "payment", "book", "user", "quiz", etc.
+  entityId: string;
+  details: string;
+  ip: string;
+  createdAt: string;
+};
+
 export type DB = {
   users: User[];
   sessions: Session[];
@@ -148,6 +211,10 @@ export type DB = {
   payments: Payment[];
   books: Book[];
   notifications: Notification[];
+  quizzes: Quiz[];
+  questions: Question[];
+  quizAttempts: QuizAttempt[];
+  auditLogs: AuditLog[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -167,6 +234,10 @@ const emptyDB = (): DB => ({
   payments: [],
   books: [],
   notifications: [],
+  quizzes: [],
+  questions: [],
+  quizAttempts: [],
+  auditLogs: [],
 });
 
 let cache: DB | null = null;
@@ -220,6 +291,21 @@ function migrateDB(db: DB) {
     if (l.duration === undefined) l.duration = 0;
     if (l.preview === undefined) l.preview = false;
     if (!l.moduleId) l.moduleId = "";
+  }
+  // Migrate certificates: add hash, skills, expiresAt
+  if (!db.quizzes) db.quizzes = [];
+  if (!db.questions) db.questions = [];
+  if (!db.quizAttempts) db.quizAttempts = [];
+  if (!db.auditLogs) db.auditLogs = [];
+  for (const cert of db.certificates) {
+    if (!cert.hash) {
+      cert.hash = crypto
+        .createHash("sha256")
+        .update(cert.code + cert.userId + cert.courseId + cert.issuedAt)
+        .digest("hex");
+    }
+    if (!cert.skills) cert.skills = [];
+    if (cert.expiresAt === undefined) cert.expiresAt = null;
   }
 }
 
@@ -445,4 +531,269 @@ export function notifyAllStudents(title: string, message: string, link: string):
   for (const student of students) {
     createNotification({ userId: student.id, type: "new_course", title, message, link });
   }
+}
+
+// ---------------------------------------------------------------
+// Enterprise: Enhanced Certificate functions
+// ---------------------------------------------------------------
+
+export function generateCertHash(code: string, userId: string, courseId: string, issuedAt: string): string {
+  return crypto
+    .createHash("sha256")
+    .update(code + userId + courseId + issuedAt + "TechPathAcademy2026")
+    .digest("hex");
+}
+
+export function verifyCertificate(code: string, hash: string): Certificate | null {
+  const cert = readDB().certificates.find((c) => c.code === code);
+  if (!cert) return null;
+  const expectedHash = cert.hash || generateCertHash(cert.code, cert.userId, cert.courseId, cert.issuedAt);
+  return hash === expectedHash ? cert : null;
+}
+
+export function getCertificateByCode(code: string): Certificate | undefined {
+  return readDB().certificates.find((c) => c.code === code);
+}
+
+export function getExpiredCertificates(): Certificate[] {
+  const now = nowISO();
+  return readDB().certificates.filter((c) => c.expiresAt && c.expiresAt < now);
+}
+
+export function getExpiringCertificates(days: number = 30): Certificate[] {
+  const now = new Date();
+  const threshold = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+  return readDB().certificates.filter(
+    (c) => c.expiresAt && c.expiresAt < threshold.toISOString() && c.expiresAt > now.toISOString()
+  );
+}
+
+// ---------------------------------------------------------------
+// Enterprise: Quiz & Assessment functions
+// ---------------------------------------------------------------
+
+export function getQuizByLessonId(lessonId: string): Quiz | undefined {
+  return readDB().quizzes.find((q) => q.lessonId === lessonId);
+}
+
+export function getQuizById(id: string): Quiz | undefined {
+  return readDB().quizzes.find((q) => q.id === id);
+}
+
+export function getQuestionsForQuiz(quizId: string): Question[] {
+  return readDB().questions
+    .filter((q) => q.quizId === quizId)
+    .sort((a, b) => a.order - b.order);
+}
+
+export function createQuiz(data: Omit<Quiz, "id" | "createdAt">): Quiz {
+  const quiz: Quiz = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.quizzes.push(quiz); });
+  return quiz;
+}
+
+export function updateQuiz(id: string, updates: Partial<Quiz>): void {
+  mutate((db) => {
+    const q = db.quizzes.find((q) => q.id === id);
+    if (q) Object.assign(q, updates);
+  });
+}
+
+export function deleteQuiz(id: string): void {
+  mutate((db) => {
+    db.quizzes = db.quizzes.filter((q) => q.id !== id);
+    db.questions = db.questions.filter((q) => q.quizId !== id);
+  });
+}
+
+export function createQuestion(data: Omit<Question, "id" | "order"> & { order?: number }): Question {
+  const existingCount = readDB().questions.filter((q) => q.quizId === data.quizId).length;
+  const question: Question = {
+    ...data,
+    id: uid(),
+    order: data.order ?? existingCount,
+  };
+  mutate((db) => { db.questions.push(question); });
+  return question;
+}
+
+export function deleteQuestion(id: string): void {
+  mutate((db) => {
+    db.questions = db.questions.filter((q) => q.id !== id);
+  });
+}
+
+export function getQuizAttempts(userId: string, quizId: string): QuizAttempt[] {
+  return readDB().quizAttempts
+    .filter((a) => a.userId === userId && a.quizId === quizId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getBestQuizScore(userId: string, quizId: string): number {
+  const attempts = getQuizAttempts(userId, quizId);
+  if (attempts.length === 0) return 0;
+  return Math.max(...attempts.map((a) => a.score));
+}
+
+export function createQuizAttempt(data: Omit<QuizAttempt, "id" | "createdAt">): QuizAttempt {
+  const attempt: QuizAttempt = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.quizAttempts.unshift(attempt); });
+  return attempt;
+}
+
+// Adaptive learning: check if a module is unlocked for a user
+export function isModuleUnlocked(userId: string, moduleId: string): boolean {
+  const module = readDB().modules.find((m) => m.id === moduleId);
+  if (!module) return false;
+  // Find prerequisite lessons (quiz lessons in previous modules)
+  const courseModules = getModulesForCourse(module.courseId).sort((a, b) => a.order - b.order);
+  const moduleIndex = courseModules.findIndex((m) => m.id === moduleId);
+  if (moduleIndex <= 0) return true; // first module always unlocked
+  // Check if all lessons in all previous modules are completed
+  for (let i = 0; i < moduleIndex; i++) {
+    const prevModule = courseModules[i];
+    const lessons = getLessonsForModule(prevModule.id);
+    for (const lesson of lessons) {
+      const completed = readDB().progress.some(
+        (p) => p.userId === userId && p.lessonId === lesson.id
+      );
+      if (!completed) return false;
+      // If it's a quiz lesson, check if passed
+      if (lesson.type === "quiz") {
+        const quiz = getQuizByLessonId(lesson.id);
+        if (quiz) {
+          const bestScore = getBestQuizScore(userId, quiz.id);
+          if (bestScore < quiz.passingScore) return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------
+// Enterprise: Audit Log functions
+// ---------------------------------------------------------------
+
+export function createAuditLog(data: {
+  userId: string;
+  userName: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  details: string;
+  ip?: string;
+}): AuditLog {
+  const log: AuditLog = {
+    id: uid(),
+    userId: data.userId,
+    userName: data.userName,
+    action: data.action,
+    entity: data.entity,
+    entityId: data.entityId,
+    details: data.details,
+    ip: data.ip || "",
+    createdAt: nowISO(),
+  };
+  mutate((db) => {
+    db.auditLogs.unshift(log);
+    // Keep only last 5000 entries to prevent unbounded growth
+    if (db.auditLogs.length > 5000) db.auditLogs = db.auditLogs.slice(0, 5000);
+  });
+  return log;
+}
+
+export function getAuditLogs(limit: number = 100, offset: number = 0): AuditLog[] {
+  return readDB().auditLogs.slice(offset, offset + limit);
+}
+
+export function getAuditLogCount(): number {
+  return readDB().auditLogs.length;
+}
+
+export function getAuditLogsByUser(userId: string): AuditLog[] {
+  return readDB().auditLogs.filter((l) => l.userId === userId);
+}
+
+// ---------------------------------------------------------------
+// Enterprise: Data Export helpers
+// ---------------------------------------------------------------
+
+export function exportUsersCSV(): string {
+  const users = readDB().users;
+  const headers = ["ID", "Name", "Email", "Role", "Created At"];
+  const rows = users.map((u) => [u.id, u.name, u.email, u.role, u.createdAt]);
+  return [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+}
+
+export function exportEnrollmentsCSV(): string {
+  const db = readDB();
+  const headers = ["User", "Email", "Course", "Price", "Purchased At", "Completed"];
+  const rows = db.enrollments.map((e) => {
+    const user = db.users.find((u) => u.id === e.userId);
+    const course = db.courses.find((c) => c.id === e.courseId);
+    return [
+      user?.name || "Unknown",
+      user?.email || "",
+      course?.title || "Unknown",
+      String(course?.price || 0),
+      e.purchasedAt,
+      String(e.completed),
+    ];
+  });
+  return [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+}
+
+export function exportPaymentsCSV(): string {
+  const db = readDB();
+  const headers = ["User", "Email", "Course", "Amount", "Method", "Status", "Ref", "Date"];
+  const rows = db.payments.map((p) => {
+    const user = db.users.find((u) => u.id === p.userId);
+    const course = db.courses.find((c) => c.id === p.courseId);
+    return [
+      user?.name || "Unknown",
+      user?.email || "",
+      course?.title || "Unknown",
+      String(p.amount),
+      p.method,
+      p.status,
+      p.ref,
+      p.createdAt,
+    ];
+  });
+  return [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+}
+
+export function getPlatformStats() {
+  const db = readDB();
+  const totalRevenue = db.payments
+    .filter((p) => p.status === "paid")
+    .reduce((sum, p) => sum + p.amount, 0);
+  const totalStudents = db.users.filter((u) => u.role === "student").length;
+  const totalEnrollments = db.enrollments.length;
+  const completedCourses = db.enrollments.filter((e) => e.completed).length;
+  const totalCertificates = db.certificates.length;
+  const totalQuizzes = db.quizzes.length;
+  const totalQuizAttempts = db.quizAttempts.length;
+  const avgQuizScore =
+    db.quizAttempts.length > 0
+      ? Math.round(
+          db.quizAttempts.reduce((sum, a) => sum + a.score, 0) / db.quizAttempts.length
+        )
+      : 0;
+  return {
+    totalUsers: db.users.length,
+    totalStudents,
+    totalCourses: db.courses.length,
+    totalEnrollments,
+    completedCourses,
+    totalRevenue,
+    totalCertificates,
+    totalBooks: db.books.length,
+    totalReviews: db.reviews.length,
+    totalQuizzes,
+    totalQuizAttempts,
+    avgQuizScore,
+    totalAuditLogs: db.auditLogs.length,
+  };
 }
