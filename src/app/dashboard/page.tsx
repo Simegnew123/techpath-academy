@@ -7,6 +7,8 @@ import {
   getCategoryById,
   getCompletionPercent,
   getCertificate,
+  getExpiringCertificates,
+  getExpiredCertificates,
 } from "@/lib/store";
 import { buildCourseCardData } from "@/lib/courseData";
 
@@ -51,6 +53,11 @@ export default async function DashboardPage({
   const completedCount = myCourses.filter(
     (c) => getCompletionPercent(user.id, c.id) === 100
   ).length;
+
+  // Recertification status
+  const expiringCerts = getExpiringCertificates(30).filter((c) => c.userId === user.id);
+  const expiredCerts = getExpiredCertificates().filter((c) => c.userId === user.id);
+  const now = new Date();
 
   // Stats
   const totalLessons = myCourses.reduce(
@@ -244,6 +251,62 @@ export default async function DashboardPage({
             })}
           </div>
         </>
+      )}
+
+      {/* Recertification alerts */}
+      {(expiringCerts.length > 0 || expiredCerts.length > 0) && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-slate-900">Recertification Status ⏰</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {/* Expiring soon */}
+            {expiringCerts.map((cert) => {
+              const course = getCourseById(cert.courseId);
+              if (!course) return null;
+              const daysLeft = Math.ceil((new Date(cert.expiresAt!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              return (
+                <div key={cert.id} className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">⏰</span>
+                    <h3 className="font-bold text-amber-900">Expiring Soon</h3>
+                  </div>
+                  <p className="mt-2 text-sm text-amber-800">
+                    Your certificate for <strong>{course.title}</strong> expires in <strong>{daysLeft} days</strong>.
+                  </p>
+                  <Link
+                    href={`/courses/${course.slug}`}
+                    className="mt-3 inline-block rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+                  >
+                    Renew Now →
+                  </Link>
+                </div>
+              );
+            })}
+            {/* Already expired */}
+            {expiredCerts.map((cert) => {
+              const course = getCourseById(cert.courseId);
+              if (!course) return null;
+              return (
+                <div key={cert.id} className="rounded-2xl border border-red-300 bg-red-50 p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🔴</span>
+                    <h3 className="font-bold text-red-900">Expired</h3>
+                  </div>
+                  <p className="mt-2 text-sm text-red-800">
+                    Your certificate for <strong>{course.title}</strong> has expired.
+                    Re-enroll to renew your certification.
+                  </p>
+                  <Link
+                    href={`/courses/${course.slug}`}
+                    className="mt-3 inline-block rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  >
+                    Re-enroll →
+                  </Link>
+    {/* end of recertification block */}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* Certificates */}
