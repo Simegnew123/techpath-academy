@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import NotificationBell from "./NotificationBell";
+import SearchBar from "./SearchBar";
 
 type Me = {
   user: { name: string; role: string } | null;
@@ -35,10 +36,10 @@ export default function Nav() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-5 text-sm font-medium text-slate-600 md:flex">
+          <SearchBar />
           <Link href="/" className="hover:text-indigo-600">Home</Link>
           <Link href="/courses" className="hover:text-indigo-600">Courses</Link>
           <Link href="/books" className="hover:text-indigo-600">Library</Link>
-          <Link href="/#free-tutorials" className="hover:text-indigo-600">Free Tutorials</Link>
           {user && (
             <Link href="/dashboard" className="hover:text-indigo-600">My Learning</Link>
           )}
