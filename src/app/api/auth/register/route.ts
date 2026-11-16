@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDB, mutate, uid, nowISO } from "@/lib/store";
+import { readDB, mutate, uid, nowISO, createNotification } from "@/lib/store";
 import { hashPassword, createSession } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -23,18 +23,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
   }
 
+  const isFirstUser = db.users.length === 0;
+
   const user = {
     id: uid(),
     name,
     email,
     passwordHash: await hashPassword(password),
     // First registered user becomes the admin (owner).
-    role: (db.users.length === 0 ? "admin" : "student") as "admin" | "student",
+    role: (isFirstUser ? "admin" : "student") as "admin" | "student",
     createdAt: nowISO(),
   };
 
   mutate((d) => {
     d.users.push(user);
+  });
+
+  // Welcome notification
+  createNotification({
+    userId: user.id,
+    type: "welcome",
+    title: `👋 Welcome to TechPath Academy, ${name.split(" ")[0]}!`,
+    message: isFirstUser
+      ? "You're the first user — you've been set up as the Admin. Go to the Admin Dashboard to create courses and manage your LMS."
+      : "Explore our courses, check out the book library, and start learning today!",
+    link: isFirstUser ? "/admin" : "/courses",
   });
 
   await createSession(user.id);
