@@ -2,7 +2,7 @@ import {
   readDB, mutate, writeDB, uid, nowISO,
   type Course, type Module, type Lesson, type Review, type Certificate, type Enrollment,
   getLessonsForCourse, getModulesForCourse, getEnrollment,
-  generateCertCode, getCertificate, getCompletionPercent,
+  generateCertCode, getCertificate, getCompletionPercent, generateCertHash,
 } from "./store";
 import { CATEGORIES, getCategoryByName } from "./categories";
 
@@ -251,12 +251,17 @@ export function markLessonCompleted(userId: string, lessonId: string): void {
         // Auto-generate certificate
         const existingCert = getCertificate(userId, lesson.courseId);
         if (!existingCert) {
+          const certCode = generateCertCode();
+          const issuedAt = nowISO();
           db.certificates.push({
             id: uid(),
             userId,
             courseId: lesson.courseId,
-            code: generateCertCode(),
-            issuedAt: nowISO(),
+            code: certCode,
+            hash: generateCertHash(certCode, userId, lesson.courseId, issuedAt),
+            skills: [],
+            issuedAt,
+            expiresAt: null,
           });
         }
       }
@@ -306,12 +311,17 @@ export function issueCertificate(userId: string, courseId: string): Certificate 
   if (existing) return existing;
   const pct = getCompletionPercent(userId, courseId);
   if (pct < 100) return undefined;
+  const certCode = generateCertCode();
+  const issuedAt = nowISO();
   const cert: Certificate = {
     id: uid(),
     userId,
     courseId,
-    code: generateCertCode(),
-    issuedAt: nowISO(),
+    code: certCode,
+    hash: generateCertHash(certCode, userId, courseId, issuedAt),
+    skills: [],
+    issuedAt,
+    expiresAt: null,
   };
   mutate((db) => { db.certificates.push(cert); });
   return cert;
