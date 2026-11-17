@@ -49,6 +49,7 @@ export type Course = {
   level: "Beginner" | "Intermediate" | "Advanced";
   language: string;         // e.g. "English"
   createdAt: string;
+  prerequisiteCourseIds: string[]; // courses that must be completed before enrolling
 };
 
 export type Module = {
@@ -58,7 +59,7 @@ export type Module = {
   order: number;
 };
 
-export type LessonType = "video" | "text" | "quiz" | "pdf";
+export type LessonType = "video" | "text" | "quiz" | "pdf" | "ctf" | "lab";
 
 export type Lesson = {
   id: string;
@@ -282,6 +283,7 @@ export type Streak = {
   longestStreak: number;
   lastActiveDate: string;     // YYYY-MM-DD
   totalActiveDays: number;
+  totalXP?: number;           // gamification XP points
 };
 
 export type LeaderboardEntry = {
@@ -662,6 +664,118 @@ export type ServiceReview = {
   createdAt: string;
 };
 
+// ---------------------------------------------------------------
+// Phase 6: CTF Challenges, Labs, Team Licensing, Open Badges
+// ---------------------------------------------------------------
+
+/** CTF (Capture The Flag) challenge — embedded in lessons */
+export type CTFChallenge = {
+  id: string;
+  lessonId: string;              // which lesson this belongs to
+  courseId: string;              // denormalized
+  title: string;
+  description: string;           // challenge prompt (markdown)
+  category: "crypto" | "forensics" | "network" | "web" | "linux" | "reverse" | "misc";
+  difficulty: "easy" | "medium" | "hard" | "expert";
+  flagHash: string;              // SHA-256 hash of the flag (case-insensitive)
+  points: number;                // XP/gamification points awarded
+  hint: string;                  // progressive hint shown after 3 failed attempts
+  maxAttempts: number;           // 0 = unlimited
+  solveCount: number;            // how many users have solved it
+  createdAt: string;
+};
+
+/** CTF solve record — tracks who solved what */
+export type CTFSolve = {
+  id: string;
+  challengeId: string;
+  userId: string;
+  attemptsUsed: number;
+  solvedAt: string;
+  pointsAwarded: number;
+};
+
+/** Interactive lab configuration — embedded in lessons */
+export type LabConfig = {
+  id: string;
+  lessonId: string;
+  courseId: string;
+  type: "terminal" | "network_sim" | "packet_capture" | "firewall_config" | "cli_challenge";
+  title: string;
+  description: string;
+  /** For terminal/cli_challenge: available commands and their simulated outputs */
+  commands: { command: string; output: string; success?: boolean }[];
+  /** Guided steps the student must complete in order */
+  steps: { instruction: string; expectedCommand: string; hint: string; completed: boolean }[];
+  /** Environment setup info shown to student */
+  environment: string;           // e.g. "Kali Linux 2024.1 | 2 vCPU | 4GB RAM"
+  timeLimit: number;             // minutes, 0 = no limit
+  createdAt: string;
+};
+
+/** Lab completion record */
+export type LabCompletion = {
+  id: string;
+  labConfigId: string;
+  userId: string;
+  stepsCompleted: number;
+  totalSteps: number;
+  completed: boolean;
+  completedAt: string | null;
+  startedAt: string;
+};
+
+/** Corporate / Team seat license */
+export type TeamLicense = {
+  id: string;
+  companyName: string;
+  contactEmail: string;          // manager's email
+  contactName: string;
+  plan: "starter" | "team" | "enterprise";
+  seatsPurchased: number;
+  seatsUsed: number;
+  coursesIncluded: string[];     // course IDs the team has access to (empty = all)
+  amountPaid: number;
+  currency: string;
+  paymentRef: string;
+  status: "active" | "expired" | "suspended";
+  createdAt: string;
+  expiresAt: string;             // ISO date
+};
+
+/** Team member — linked to a TeamLicense */
+export type TeamMember = {
+  id: string;
+  licenseId: string;             // FK -> TeamLicense.id
+  userId: string;                // the employee's user account
+  email: string;
+  name: string;
+  invitedAt: string;
+  joinedAt: string | null;
+  status: "invited" | "active" | "removed";
+};
+
+/** Open Badges v3 assertion — compliant with Open Badges standard */
+export type BadgeAssertion = {
+  id: string;                    // unique assertion ID (UUID)
+  badgeId: string;               // FK -> Badge.id
+  userId: string;
+  issuedOn: string;              // ISO date
+  verificationUrl: string;       // public URL to verify this assertion
+  evidenceUrl: string;           // URL to evidence (course page, certificate, etc.)
+  recipientEmail: string;
+  recipientName: string;
+};
+
+/** Course prerequisite — course A requires course B to be completed first */
+export type Prerequisite = {
+  id: string;
+  courseId: string;              // the course that has the prerequisite
+  prerequisiteCourseId: string;  // the course that must be completed first
+  requiredScore: number;         // minimum final exam score (0-100, 0 = just completion)
+  createdAt: string;
+};
+
 export type DB = {
   users: User[];
   sessions: Session[];
@@ -719,6 +833,15 @@ export type DB = {
   services: Service[];
   serviceBookings: ServiceBooking[];
   serviceReviews: ServiceReview[];
+  // Phase 6: CTF, Labs, Teams, Badges, Prerequisites
+  ctfChallenges: CTFChallenge[];
+  ctfSolves: CTFSolve[];
+  labConfigs: LabConfig[];
+  labCompletions: LabCompletion[];
+  teamLicenses: TeamLicense[];
+  teamMembers: TeamMember[];
+  badgeAssertions: BadgeAssertion[];
+  prerequisites: Prerequisite[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -778,6 +901,15 @@ const emptyDB = (): DB => ({
   services: [],
   serviceBookings: [],
   serviceReviews: [],
+  // Phase 6: CTF, Labs, Teams, Badges, Prerequisites
+  ctfChallenges: [],
+  ctfSolves: [],
+  labConfigs: [],
+  labCompletions: [],
+  teamLicenses: [],
+  teamMembers: [],
+  badgeAssertions: [],
+  prerequisites: [],
 });
 
 let cache: DB | null = null;
@@ -917,6 +1049,15 @@ function migrateDB(db: DB) {
   if (!db.services) db.services = [];
   if (!db.serviceBookings) db.serviceBookings = [];
   if (!db.serviceReviews) db.serviceReviews = [];
+  // Phase 6 collections
+  if (!db.ctfChallenges) db.ctfChallenges = [];
+  if (!db.ctfSolves) db.ctfSolves = [];
+  if (!db.labConfigs) db.labConfigs = [];
+  if (!db.labCompletions) db.labCompletions = [];
+  if (!db.teamLicenses) db.teamLicenses = [];
+  if (!db.teamMembers) db.teamMembers = [];
+  if (!db.badgeAssertions) db.badgeAssertions = [];
+  if (!db.prerequisites) db.prerequisites = [];
   // Seed default competencies if empty
   if (db.competencies.length === 0) {
     db.competencies = getDefaultCompetencies();
@@ -934,6 +1075,10 @@ function migrateDB(db: DB) {
     }
     if (!cert.skills) cert.skills = [];
     if (cert.expiresAt === undefined) cert.expiresAt = null;
+  }
+  // Migrate courses — add prerequisiteCourseIds
+  for (const c of db.courses) {
+    if (!c.prerequisiteCourseIds) c.prerequisiteCourseIds = [];
   }
 }
 
