@@ -17,11 +17,13 @@ export default function SettingsForm({
   name,
   hasSecurityQuestion,
   currentQuestion,
+  mfaEnabled,
 }: {
   email: string;
   name: string;
   hasSecurityQuestion: boolean;
   currentQuestion: string;
+  mfaEnabled: boolean;
 }) {
   // --- Change Password ---
   const [currentPassword, setCurrentPassword] = useState("");
@@ -96,6 +98,78 @@ export default function SettingsForm({
     setSqLoading(false);
   }
 
+  // --- MFA (Two-Factor Authentication) ---
+  const [mfaOn, setMfaOn] = useState(mfaEnabled);
+  const [mfaStep, setMfaStep] = useState<"idle" | "setup" | "confirm">("idle");
+  const [mfaQr, setMfaQr] = useState("");
+  const [mfaSecret, setMfaSecret] = useState("");
+  const [mfaConfirmCode, setMfaConfirmCode] = useState("");
+  const [mfaDisableCode, setMfaDisableCode] = useState("");
+  const [mfaError, setMfaError] = useState("");
+  const [mfaSuccess, setMfaSuccess] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
+
+  async function startMfaSetup() {
+    setMfaError(""); setMfaSuccess("");
+    setMfaLoading(true);
+    try {
+      const res = await fetch("/api/auth/mfa-setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generate" }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMfaError(data.error || "Failed to start MFA setup."); setMfaLoading(false); return; }
+      setMfaQr(data.qrCode);
+      setMfaSecret(data.secret);
+      setMfaStep("confirm");
+      setMfaLoading(false);
+    } catch { setMfaError("Network error."); setMfaLoading(false); }
+  }
+
+  async function confirmMfaSetup(e: React.FormEvent) {
+    e.preventDefault();
+    setMfaError(""); setMfaSuccess("");
+    if (mfaConfirmCode.length !== 6) { setMfaError("Enter a 6-digit code."); return; }
+    setMfaLoading(true);
+    try {
+      const res = await fetch("/api/auth/mfa-setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "confirm", code: mfaConfirmCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMfaError(data.error || "Invalid code."); setMfaLoading(false); return; }
+      setMfaOn(true);
+      setMfaStep("idle");
+      setMfaConfirmCode("");
+      setMfaQr("");
+      setMfaSecret("");
+      setMfaSuccess("MFA enabled! You'll now need your authenticator app to log in.");
+      setMfaLoading(false);
+    } catch { setMfaError("Network error."); setMfaLoading(false); }
+  }
+
+  async function disableMfa(e: React.FormEvent) {
+    e.preventDefault();
+    setMfaError(""); setMfaSuccess("");
+    setMfaLoading(true);
+    try {
+      const res = await fetch("/api/auth/mfa-disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: mfaDisableCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMfaError(data.error || "Failed to disable MFA."); setMfaLoading(false); return; }
+      setMfaOn(false);
+      setMfaDisableCode("");
+      setMfaSuccess("MFA disabled.");
+      setMfaLoading(false);
+    } catch { setMfaError("Network error."); setMfaLoading(false); }
+  }
+
+  // --- Render ---
   return (
     <div className="space-y-8">
       {/* Account Info */}
@@ -219,6 +293,104 @@ export default function SettingsForm({
             {sqLoading ? "Saving..." : "Save Security Question"}
           </button>
         </form>
+      </div>
+
+      {/* MFA / Two-Factor Authentication */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">🔐 Two-Factor Authentication (2FA)</h3>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          Add an extra layer of security. You&apos;ll need an authenticator app (Google Authenticator, Authy, etc.) to log in.
+        </p>
+
+        {mfaError && (
+          <div className="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">{mfaError}</div>
+        )}
+        {mfaSuccess && (
+          <div className="mt-3 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700 dark:bg-green-950/40 dark:text-green-400">{mfaSuccess}</div>
+        )}
+
+        <div className="mt-4">
+          {mfaOn ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
+                ✓ 2FA is enabled
+              </div>
+              <form onSubmit={disableMfa} className="flex flex-wrap items-end gap-3">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Enter code to disable</label>
+                  <input
+                    type="text"
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={mfaDisableCode}
+                    onChange={(e) => setMfaDisableCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="000000"
+                    className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-center tracking-widest focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={mfaLoading || mfaDisableCode.length !== 6}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  {mfaLoading ? "..." : "Disable 2FA"}
+                </button>
+              </form>
+            </div>
+          ) : mfaStep === "confirm" ? (
+            <div className="space-y-4">
+              {mfaQr && (
+                <div className="flex flex-col items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={mfaQr} alt="QR code for authenticator app" width={200} height={200} className="rounded-lg border border-slate-200 dark:border-slate-700" />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Can&apos;t scan? Enter this key manually: <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800 dark:text-slate-300">{mfaSecret}</code>
+                  </p>
+                </div>
+              )}
+              <form onSubmit={confirmMfaSetup} className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Enter the 6-digit code from your app</label>
+                  <input
+                    type="text"
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={mfaConfirmCode}
+                    onChange={(e) => setMfaConfirmCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="000000"
+                    className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-center text-lg tracking-widest focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={mfaLoading || mfaConfirmCode.length !== 6}
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                  >
+                    {mfaLoading ? "Verifying..." : "Confirm & Enable"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMfaStep("idle"); setMfaQr(""); setMfaSecret(""); setMfaConfirmCode(""); }}
+                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <button
+              onClick={startMfaSetup}
+              disabled={mfaLoading}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {mfaLoading ? "Generating..." : "Enable 2FA"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Forgot password link */}
