@@ -9,7 +9,7 @@ type LessonDraft = {
   title: string;
   videoUrl: string;
   content: string;
-  type: "text" | "video" | "quiz" | "pdf";
+  type: "text" | "video" | "quiz" | "pdf" | "ctf" | "lab";
   duration: number;
   preview: boolean;
 };
