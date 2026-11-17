@@ -112,6 +112,42 @@ export default async function AdminPage() {
         </div>
       </div>
 
+      {/* Phase 5 Advanced Tools (admin & instructor) */}
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          href="/admin/at-risk"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+        >
+          ⚠️ At-Risk Students
+        </Link>
+        <Link
+          href="/admin/analytics-heatmap"
+          className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-100"
+        >
+          🔥 Question Heatmap
+        </Link>
+        <Link
+          href="/admin/skill-matrix"
+          className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+        >
+          🎯 Skill Matrix
+        </Link>
+        <Link
+          href="/admin/ai-authoring"
+          className="rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
+        >
+          🤖 AI Authoring
+        </Link>
+        {user.role === "admin" && (
+          <Link
+            href="/admin/integrations"
+            className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            🔌 Integrations
+          </Link>
+        )}
+      </div>
+
       {/* Recertification check (admin only) */}
       {user.role === "admin" && (
         <div className="mt-6">
