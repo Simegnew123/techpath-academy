@@ -67,6 +67,7 @@ export function createCourse(data: {
     level: data.level || "Beginner",
     language: data.language || "English",
     createdAt: nowISO(),
+    prerequisiteCourseIds: [],
   };
   mutate((db) => {
     db.courses.push(course);
