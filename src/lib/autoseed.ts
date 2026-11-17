@@ -30,8 +30,8 @@ export function autoSeed() {
   const hash = bcrypt.hashSync("admin123", 10);
   const admin = {
     id: uid(),
-    name: "Simegnew",
-    email: "admin@techpath.academy",
+    name: "Simegnew Ademe",
+    email: "ademezerihun2013@gmail.com",
     passwordHash: hash,
     role: "admin" as const,
     bio: "IT educator and founder of TechPath Academy. Passionate about helping students build real-world IT skills.",
