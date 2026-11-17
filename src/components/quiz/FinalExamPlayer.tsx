@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Confetti from "@/components/Confetti";
 
 type Quiz = {
   id: string;
@@ -39,6 +40,7 @@ export default function FinalExamPlayer({
   const [violations, setViolations] = useState(0);
   const [violationMsg, setViolationMsg] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [celebrate, setCelebrate] = useState(false);
   const [startTime, setStartTime] = useState(0);
   const examContainerRef = useRef<HTMLDivElement>(null);
   const wasFullscreenRef = useRef(false);
@@ -121,6 +123,10 @@ export default function FinalExamPlayer({
       const data = await res.json();
       setResult(data);
       setPhase("result");
+      if (data.passed) {
+        setCelebrate(false);
+        setTimeout(() => setCelebrate(true), 100);
+      }
       if (document.fullscreenElement) document.exitFullscreen();
     } catch {
       setPhase("exam");
@@ -173,6 +179,8 @@ export default function FinalExamPlayer({
   if (phase === "result" && result) {
     const passed = result.passed;
     return (
+      <>
+      <Confetti trigger={celebrate} />
       <div className={`rounded-2xl border-2 p-8 text-center ${passed ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
         <div className="text-6xl">{passed ? "🎉" : "😔"}</div>
         <h2 className={`mt-4 text-2xl font-bold ${passed ? "text-green-900" : "text-red-900"}`}>
@@ -244,6 +252,7 @@ export default function FinalExamPlayer({
           </a>
         </div>
       </div>
+      </>
     );
   }
 
