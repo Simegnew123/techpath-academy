@@ -96,6 +96,9 @@ export default function Nav() {
             <Link href="/dashboard" className="hover:text-indigo-600 dark:hover:text-indigo-400">My Learning</Link>
           )}
           {user && (
+            <Link href="/teams" className="hover:text-indigo-600 dark:hover:text-indigo-400">Teams</Link>
+          )}
+          {user && (
             <Link href="/settings" className="hover:text-indigo-600 dark:hover:text-indigo-400">Settings</Link>
           )}
           {(user?.role === "admin" || user?.role === "instructor") && (
@@ -186,6 +189,9 @@ export default function Nav() {
 
             {user && (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="mt-2 rounded-lg px-3 py-2 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-slate-800">My Learning</Link>
+            )}
+            {user && (
+              <Link href="/teams" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-slate-800">🏢 Team Dashboard</Link>
             )}
             {user && (
               <Link href="/settings" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-slate-800">Settings</Link>
