@@ -176,6 +176,69 @@ export function addLesson(data: {
   return lesson;
 }
 
+// ---- CTF Challenge helper ----
+export function createCTFChallenge(data: {
+  lessonId: string;
+  courseId: string;
+  title: string;
+  description: string;
+  category: "crypto" | "forensics" | "network" | "web" | "linux" | "reverse" | "misc";
+  difficulty: "easy" | "medium" | "hard" | "expert";
+  flag: string;            // plain-text flag — hashed before storage
+  points: number;
+  hint: string;
+  maxAttempts: number;
+}): void {
+  const crypto = require("crypto");
+  const flagHash = crypto.createHash("sha256").update(data.flag.trim().toLowerCase()).digest("hex");
+  mutate((db) => {
+    db.ctfChallenges.push({
+      id: uid(),
+      lessonId: data.lessonId,
+      courseId: data.courseId,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      difficulty: data.difficulty,
+      flagHash,
+      points: data.points,
+      hint: data.hint,
+      maxAttempts: data.maxAttempts,
+      solveCount: 0,
+      createdAt: nowISO(),
+    });
+  });
+}
+
+// ---- Lab Config helper ----
+export function createLabConfig(data: {
+  lessonId: string;
+  courseId: string;
+  title: string;
+  description: string;
+  type: "terminal" | "network_sim" | "packet_capture" | "firewall_config" | "cli_challenge";
+  environment: string;
+  timeLimit: number;
+  steps: { instruction: string; expectedCommand: string; hint: string }[];
+  commands: { command: string; output: string; success?: boolean }[];
+}): void {
+  mutate((db) => {
+    db.labConfigs.push({
+      id: uid(),
+      lessonId: data.lessonId,
+      courseId: data.courseId,
+      type: data.type,
+      title: data.title,
+      description: data.description,
+      commands: data.commands.map((c) => ({ command: c.command, output: c.output, success: c.success ?? true })),
+      steps: data.steps.map((s) => ({ instruction: s.instruction, expectedCommand: s.expectedCommand, hint: s.hint, completed: false })),
+      environment: data.environment,
+      timeLimit: data.timeLimit,
+      createdAt: nowISO(),
+    });
+  });
+}
+
 export function updateLesson(id: string, data: Partial<Lesson>): Lesson | undefined {
   const db = readDB();
   const lesson = db.lessons.find((l) => l.id === id);
