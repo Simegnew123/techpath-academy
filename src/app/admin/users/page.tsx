@@ -51,6 +51,23 @@ export default function AdminUsersPage() {
     if (res.ok) await fetchUsers();
   }
 
+  async function resetPassword(userId: string, name: string) {
+    const pw = prompt(`Reset password for "${name}". Enter a new password (min 6 chars):`);
+    if (!pw) return;
+    if (pw.length < 6) { alert("Password must be at least 6 characters."); return; }
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, action: "reset_password", newPassword: pw }),
+    });
+    if (res.ok) {
+      alert(`Password for "${name}" has been reset. Share the new password with the user.`);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to reset password.");
+    }
+  }
+
   const filtered = users.filter(u =>
     !filter ||
     u.name.toLowerCase().includes(filter.toLowerCase()) ||
@@ -113,13 +130,22 @@ export default function AdminUsersPage() {
                 <td className="px-4 py-3 text-center text-slate-600">{u.certificates}</td>
                 <td className="px-4 py-3 text-xs text-slate-400">{new Date(u.createdAt).toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => deleteUser(u.id, u.name)}
-                    className="rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                    aria-label={`Delete user ${u.name}`}
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      onClick={() => resetPassword(u.id, u.name)}
+                      className="rounded-lg px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
+                      aria-label={`Reset password for ${u.name}`}
+                    >
+                      Reset PW
+                    </button>
+                    <button
+                      onClick={() => deleteUser(u.id, u.name)}
+                      className="rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                      aria-label={`Delete user ${u.name}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
