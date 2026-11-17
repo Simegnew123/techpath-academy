@@ -22,6 +22,8 @@ export type User = {
   createdAt: string;
   securityQuestion?: string;   // for forgot-password flow
   securityAnswerHash?: string; // bcrypt hash of the answer (lowercased, trimmed)
+  mfaEnabled?: boolean;        // TOTP-based MFA
+  mfaSecret?: string;          // base32 TOTP secret
 };
 
 export type Session = { token: string; userId: string; expiresAt: string };
@@ -847,6 +849,8 @@ function migrateDB(db: DB) {
     if (!u.title) u.title = "";
     if (u.securityQuestion === undefined) u.securityQuestion = "";
     if (u.securityAnswerHash === undefined) u.securityAnswerHash = "";
+    if (u.mfaEnabled === undefined) u.mfaEnabled = false;
+    if (u.mfaSecret === undefined) u.mfaSecret = "";
   }
   for (const e of db.enrollments) {
     if (e.completed === undefined) e.completed = false;
