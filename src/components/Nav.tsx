@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import NotificationBell from "./NotificationBell";
 import SearchBar from "./SearchBar";
+import ThemeToggle from "./ThemeToggle";
 
 type Me = {
   user: { name: string; role: string } | null;
@@ -40,6 +41,7 @@ export default function Nav() {
           <Link href="/" className="hover:text-indigo-600">Home</Link>
           <Link href="/courses" className="hover:text-indigo-600">Courses</Link>
           <Link href="/books" className="hover:text-indigo-600">Library</Link>
+          <Link href="/flashcards" className="hover:text-indigo-600">Flashcards</Link>
           {user && (
             <Link href="/dashboard" className="hover:text-indigo-600">My Learning</Link>
           )}
@@ -52,6 +54,7 @@ export default function Nav() {
 
         {/* Desktop auth */}
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           {user ? (
             <>
               <NotificationBell loggedIn={!!user} />
