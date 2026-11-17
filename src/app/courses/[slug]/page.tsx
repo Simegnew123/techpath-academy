@@ -22,6 +22,8 @@ import {
 import { getCurrentUser } from "@/lib/auth";
 import { buildCourseCardData } from "@/lib/courseData";
 import AITutor from "@/components/AITutor";
+import PrerequisiteCheck from "@/components/PrerequisiteCheck";
+import CurrencyDisplay from "@/components/CurrencyDisplay";
 
 export const revalidate = 0;
 
@@ -115,12 +117,19 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             <div className="hidden w-80 shrink-0 lg:block">
               <div className="rounded-2xl bg-white p-6 text-slate-900 shadow-xl">
                 <div className="text-3xl font-bold">
-                  {formatPrice(course.price)}
+                  <CurrencyDisplay priceKES={course.price} />
                 </div>
                 {course.price === 0 ? (
                   <p className="mt-1 text-sm text-emerald-600">100% Free — no payment needed</p>
                 ) : (
                   <p className="mt-1 text-sm text-slate-500">One-time payment · Lifetime access</p>
+                )}
+
+                {/* Prerequisites check */}
+                {!access && (
+                  <div className="mt-3">
+                    <PrerequisiteCheck courseId={course.id} />
+                  </div>
                 )}
 
                 {access ? (
@@ -180,7 +189,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       {/* Mobile CTA bar */}
       <div className="sticky top-0 z-30 bg-white shadow-sm lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <span className="text-xl font-bold text-slate-900">{formatPrice(course.price)}</span>
+          <span className="text-xl font-bold text-slate-900"><CurrencyDisplay priceKES={course.price} showSelector={false} /></span>
           {access ? (
             <Link
               href={firstLesson ? `/courses/${course.slug}/chapters/${firstLesson.id}` : "#"}
