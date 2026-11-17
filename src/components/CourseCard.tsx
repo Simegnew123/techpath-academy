@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CurrencyDisplay from "./CurrencyDisplay";
 
 export type CourseCardData = {
   id: string;
@@ -62,7 +63,7 @@ export default function CourseCard({ course }: { course: CourseCardData }) {
             color: course.price === 0 ? "white" : "#1e293b",
           }}
         >
-          {formatPrice(course.price)}
+          <CurrencyDisplay priceKES={course.price} showSelector={false} />
         </span>
       </div>
 
