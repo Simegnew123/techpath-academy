@@ -12,6 +12,7 @@ import {
 } from "@/lib/store";
 import { buildCourseCardData } from "@/lib/courseData";
 import GamificationWidget from "@/components/GamificationWidget";
+import DailyReviewWidget from "@/components/DailyReviewWidget";
 
 export const revalidate = 0;
 
@@ -76,12 +77,20 @@ export default async function DashboardPage({
           <h1 className="text-3xl font-bold text-slate-900">My Learning</h1>
           <p className="mt-1 text-slate-500">Welcome back, {user.name}! 👋</p>
         </div>
-        <Link
-          href="/courses"
-          className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
-        >
-          Browse Courses
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/portfolio"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            🌐 My Portfolio
+          </Link>
+          <Link
+            href="/courses"
+            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+          >
+            Browse Courses
+          </Link>
+        </div>
       </div>
 
       {/* Pending payment banner (Telebirr / CBE) */}
@@ -144,6 +153,11 @@ export default async function DashboardPage({
       {/* Gamification Widget */}
       <div className="mt-4">
         <GamificationWidget userId={user.id} />
+      </div>
+
+      {/* Daily Review (Spaced Repetition) */}
+      <div className="mt-4">
+        <DailyReviewWidget />
       </div>
 
       {/* My Courses */}
