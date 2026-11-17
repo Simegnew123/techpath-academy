@@ -306,6 +306,109 @@ export default function HomePage() {
       </section>
 
       {/* ===============================================
+          TESTIMONIALS — Social proof
+          =============================================== */}
+      <section className="border-t border-slate-200 py-16 dark:border-slate-800">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">What learners say</h2>
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
+              Real feedback from students who put in the work.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                quote: "The Linux security labs were the most practical thing I&apos;ve done. I went from zero to configuring firewalls on my own home server in two weeks.",
+                name: "Dawit M.",
+                role: "IT Support Technician",
+                avatar: "DM",
+              },
+              {
+                quote: "I passed my CompTIA Network+ after taking the networking track here. The packet-capture exercises made subnetting finally click.",
+                name: "Helen T.",
+                role: "Junior Network Engineer",
+                avatar: "HT",
+              },
+                {
+                quote: "The ethical hacking course doesn&apos;t just show you tools — it teaches you the methodology. I&apos;m now doing penetration testing at my company.",
+                name: "Yonas G.",
+                role: "Security Analyst",
+                avatar: "YG",
+              },
+            ].map((t) => (
+              <div key={t.name} className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+                {/* Stars */}
+                <div className="flex gap-0.5 text-amber-400">
+                  {[1,2,3,4,5].map((s) => (
+                    <svg key={s} className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                  ))}
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: t.quote }} />
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===============================================
+          FOUNDER / INSTRUCTOR — Trust & credibility
+          =============================================== */}
+      <section className="border-t border-slate-200 bg-slate-50 py-16 dark:border-slate-800 dark:bg-slate-950/50">
+        <div className="mx-auto max-w-4xl px-4">
+          <div className="grid items-center gap-8 md:grid-cols-3">
+            {/* Avatar */}
+            <div className="flex justify-center md:justify-start">
+              <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-5xl font-bold text-white shadow-xl">
+                SA
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div className="md:col-span-2">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Meet the instructor</h2>
+              <h3 className="mt-1 text-lg font-semibold text-indigo-600 dark:text-indigo-400">Simegnew Ademe</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Founder &amp; Lead Instructor, TechPath Academy</p>
+
+              <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                Simegnew built TechPath Academy from the ground up with one goal: make practical IT training
+                accessible to everyone, not just those who can afford expensive bootcamps. With years of
+                hands-on experience in network engineering and cybersecurity, every course here is designed
+                around real-world scenarios — not just theory.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["Network Engineering", "Linux Security", "Penetration Testing", "Cloud Infrastructure", "Python Automation"].map((skill) => (
+                  <span key={skill} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <Link href="/contact" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-300">
+                  Get in touch
+                </Link>
+                <Link href="/courses" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                  Explore courses
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===============================================
           CTA — clean, no gradient
           =============================================== */}
       <section className="border-t border-slate-200 py-16 dark:border-slate-800">
