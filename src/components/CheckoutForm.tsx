@@ -13,7 +13,7 @@ const PAYMENT_INFO: Record<string, { account: string; name: string; note: string
   cbe: {
     account: "1000-2030-4050-6070",
     name: "TechPath Academy Pvt. Ltd.",
-    note: "Transfer to the CBE account above via CBE Birr, CBE Internet Banking, or bank visit. Email your transfer receipt to admin@techpath.academy.",
+    note: "Transfer to the CBE account above via CBE Birr, CBE Internet Banking, or bank visit. Email your transfer receipt to ademezerihun2013@gmail.com.",
   },
 };
 
