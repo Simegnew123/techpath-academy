@@ -95,6 +95,9 @@ export default function Nav() {
           {user && (
             <Link href="/dashboard" className="hover:text-indigo-600 dark:hover:text-indigo-400">My Learning</Link>
           )}
+          {user && (
+            <Link href="/settings" className="hover:text-indigo-600 dark:hover:text-indigo-400">Settings</Link>
+          )}
           {(user?.role === "admin" || user?.role === "instructor") && (
             <Link href="/admin" className="hover:text-indigo-600 dark:hover:text-indigo-400">
               {user.role === "admin" ? "Admin" : "Instructor"}
@@ -183,6 +186,9 @@ export default function Nav() {
 
             {user && (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="mt-2 rounded-lg px-3 py-2 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-slate-800">My Learning</Link>
+            )}
+            {user && (
+              <Link href="/settings" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-slate-800">Settings</Link>
             )}
             {user && (
               <Link href="/notifications" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50 hover:text-indigo-600 dark:hover:bg-slate-800">Notifications</Link>
