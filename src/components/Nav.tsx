@@ -41,7 +41,10 @@ export default function Nav() {
           <Link href="/" className="hover:text-indigo-600">Home</Link>
           <Link href="/courses" className="hover:text-indigo-600">Courses</Link>
           <Link href="/books" className="hover:text-indigo-600">Library</Link>
+          <Link href="/services" className="hover:text-indigo-600">Services</Link>
           <Link href="/flashcards" className="hover:text-indigo-600">Flashcards</Link>
+          <Link href="/jobs" className="hover:text-indigo-600">Jobs</Link>
+          <Link href="/hall-of-fame" className="hover:text-indigo-600">🏆</Link>
           {user && (
             <Link href="/dashboard" className="hover:text-indigo-600">My Learning</Link>
           )}
@@ -108,6 +111,10 @@ export default function Nav() {
             <Link href="/" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Home</Link>
             <Link href="/courses" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Courses</Link>
             <Link href="/books" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Library</Link>
+            <Link href="/services" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Services</Link>
+            <Link href="/flashcards" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Flashcards</Link>
+            <Link href="/jobs" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Jobs</Link>
+            <Link href="/hall-of-fame" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">🏆 Hall of Fame</Link>
             <Link href="/#free-tutorials" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Free Tutorials</Link>
             {user && (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">My Learning</Link>
