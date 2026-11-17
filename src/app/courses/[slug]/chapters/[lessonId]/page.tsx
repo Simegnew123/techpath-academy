@@ -21,6 +21,7 @@ import InteractiveVideoPlayer from "@/components/InteractiveVideoPlayer";
 import AITutor from "@/components/AITutor";
 import LessonNotes from "@/components/LessonNotes";
 import DiscussionPanel from "@/components/DiscussionPanel";
+import PomodoroTimer from "@/components/PomodoroTimer";
 import { getYouTubeEmbed } from "@/lib/video";
 
 export const revalidate = 0;
@@ -249,6 +250,11 @@ export default async function LessonPage({
               >
                 View Course Details →
               </Link>
+
+              {/* Pomodoro Timer */}
+              <div className="mt-4">
+                <PomodoroTimer courseId={course.id} lessonId={lesson.id} />
+              </div>
             </div>
           </div>
         </div>
