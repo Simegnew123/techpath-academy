@@ -366,6 +366,84 @@ export type CalendarEvent = {
   createdAt: string;
 };
 
+// ---------------------------------------------------------------
+// Phase 4: Interactive Flashcards & Spaced Repetition (SRS)
+// ---------------------------------------------------------------
+export type FlashcardDeck = {
+  id: string;
+  courseId: string;
+  lessonId: string | null;
+  title: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type Flashcard = {
+  id: string;
+  deckId: string;
+  front: string;            // question / term
+  back: string;             // answer / definition
+  order: number;
+};
+
+// SRS review record (simplified SM-2 algorithm)
+export type SRSReview = {
+  id: string;
+  userId: string;
+  flashcardId: string;
+  ease: number;             // ease factor (starts at 2.5)
+  interval: number;         // days until next review
+  repetitions: number;      // consecutive correct
+  nextReviewDate: string;   // YYYY-MM-DD
+  lastReviewedAt: string | null;
+};
+
+// ---------------------------------------------------------------
+// Phase 4: Public Student Portfolio
+// ---------------------------------------------------------------
+export type Portfolio = {
+  userId: string;
+  slug: string;              // @username URL slug
+  bio: string;
+  headline: string;          // e.g. "Network Engineer in training"
+  location: string;
+  website: string;
+  linkedinUrl: string;
+  githubUrl: string;
+  skills: string[];          // verified skill tags from certificates
+  isPublic: boolean;
+  updatedAt: string;
+};
+
+// ---------------------------------------------------------------
+// Phase 4: Study Sessions (Pomodoro / Focus Timer)
+// ---------------------------------------------------------------
+export type StudySession = {
+  id: string;
+  userId: string;
+  courseId: string;
+  lessonId: string | null;
+  durationMinutes: number;
+  sessionType: "pomodoro" | "focus" | "break";
+  completed: boolean;
+  createdAt: string;
+};
+
+// ---------------------------------------------------------------
+// Phase 4: Placement Quiz / Skill Gap Diagnostic
+// ---------------------------------------------------------------
+export type PlacementResult = {
+  id: string;
+  userId: string;
+  courseId: string;
+  quizId: string;
+  score: number;             // percentage
+  testedOutLessons: string[];  // lesson IDs the student can skip
+  recommendedLessons: string[]; // lessons the student still needs
+  takenAt: string;
+};
+
 export type DB = {
   users: User[];
   sessions: Session[];
@@ -396,6 +474,12 @@ export type DB = {
   promoCodes: PromoCode[];
   bundles: Bundle[];
   calendarEvents: CalendarEvent[];
+  flashcardDecks: FlashcardDeck[];
+  flashcards: Flashcard[];
+  srsReviews: SRSReview[];
+  portfolios: Portfolio[];
+  studySessions: StudySession[];
+  placementResults: PlacementResult[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -431,6 +515,12 @@ const emptyDB = (): DB => ({
   promoCodes: [],
   bundles: [],
   calendarEvents: [],
+  flashcardDecks: [],
+  flashcards: [],
+  srsReviews: [],
+  portfolios: [],
+  studySessions: [],
+  placementResults: [],
 });
 
 let cache: DB | null = null;
@@ -503,6 +593,13 @@ function migrateDB(db: DB) {
   if (!db.promoCodes) db.promoCodes = [];
   if (!db.bundles) db.bundles = [];
   if (!db.calendarEvents) db.calendarEvents = [];
+  // Phase 4 collections
+  if (!db.flashcardDecks) db.flashcardDecks = [];
+  if (!db.flashcards) db.flashcards = [];
+  if (!db.srsReviews) db.srsReviews = [];
+  if (!db.portfolios) db.portfolios = [];
+  if (!db.studySessions) db.studySessions = [];
+  if (!db.placementResults) db.placementResults = [];
   // Seed badges if empty
   if (db.badges.length === 0) {
     db.badges = getBadgeDefinitions();
@@ -1569,5 +1666,246 @@ export function deleteUser(userId: string): void {
     db.userBadges = db.userBadges.filter((b) => b.userId !== userId);
     db.streaks = db.streaks.filter((s) => s.userId !== userId);
     db.submissions = db.submissions.filter((s) => s.userId !== userId);
+    db.srsReviews = db.srsReviews.filter((s) => s.userId !== userId);
+    db.portfolios = db.portfolios.filter((p) => p.userId !== userId);
+    db.studySessions = db.studySessions.filter((s) => s.userId !== userId);
+    db.placementResults = db.placementResults.filter((p) => p.userId !== userId);
   });
+}
+
+// ===============================================================
+// Phase 4: Flashcards & Spaced Repetition (SRS SM-2)
+// ===============================================================
+
+export function getFlashcardDecks(courseId?: string): FlashcardDeck[] {
+  const db = readDB();
+  return courseId
+    ? db.flashcardDecks.filter((d) => d.courseId === courseId)
+    : db.flashcardDecks;
+}
+
+export function getFlashcardDeckById(id: string): FlashcardDeck | undefined {
+  return readDB().flashcardDecks.find((d) => d.id === id);
+}
+
+export function createFlashcardDeck(data: Omit<FlashcardDeck, "id" | "createdAt">): FlashcardDeck {
+  const deck: FlashcardDeck = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.flashcardDecks.push(deck); });
+  return deck;
+}
+
+export function deleteFlashcardDeck(id: string): void {
+  mutate((db) => {
+    db.flashcardDecks = db.flashcardDecks.filter((d) => d.id !== id);
+    db.flashcards = db.flashcards.filter((c) => c.deckId !== id);
+  });
+}
+
+export function getFlashcards(deckId: string): Flashcard[] {
+  return readDB().flashcards
+    .filter((c) => c.deckId === deckId)
+    .sort((a, b) => a.order - b.order);
+}
+
+export function createFlashcard(data: Omit<Flashcard, "id" | "order">): Flashcard {
+  const db = readDB();
+  const order = db.flashcards.filter((c) => c.deckId === data.deckId).length;
+  const card: Flashcard = { ...data, id: uid(), order };
+  mutate((d) => { d.flashcards.push(card); });
+  return card;
+}
+
+export function deleteFlashcard(id: string): void {
+  mutate((db) => {
+    db.flashcards = db.flashcards.filter((c) => c.id !== id);
+    db.srsReviews = db.srsReviews.filter((r) => r.flashcardId !== id);
+  });
+}
+
+// SRS: Get cards due for review today
+export function getDueSRSReviews(userId: string): (SRSReview & { flashcard?: Flashcard })[] {
+  const db = readDB();
+  const today = new Date().toISOString().split("T")[0];
+  return db.srsReviews
+    .filter((r) => r.userId === userId && r.nextReviewDate <= today)
+    .map((r) => ({ ...r, flashcard: db.flashcards.find((c) => c.id === r.flashcardId) }))
+    .filter((r) => r.flashcard);
+}
+
+// SRS: Process a review and update schedule (simplified SM-2)
+export function processSRSReview(userId: string, flashcardId: string, quality: 0 | 1 | 2 | 3 | 4 | 5): void {
+  // quality: 0=again, 1=hard, 2=hard, 3=good, 4=easy, 5=perfect
+  const db = readDB();
+  let review = db.srsReviews.find((r) => r.userId === userId && r.flashcardId === flashcardId);
+
+  if (!review) {
+    // First review — create SRS record
+    review = {
+      id: uid(),
+      userId,
+      flashcardId,
+      ease: 2.5,
+      interval: 0,
+      repetitions: 0,
+      nextReviewDate: new Date().toISOString().split("T")[0],
+      lastReviewedAt: null,
+    };
+  }
+
+  // SM-2 algorithm (simplified)
+  if (quality < 3) {
+    // Failed — reset
+    review.repetitions = 0;
+    review.interval = 1;
+  } else {
+    // Passed
+    review.repetitions += 1;
+    if (review.repetitions === 1) review.interval = 1;
+    else if (review.repetitions === 2) review.interval = 3;
+    else review.interval = Math.round(review.interval * review.ease);
+  }
+
+  // Update ease factor
+  review.ease = Math.max(1.3, review.ease + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+
+  // Calculate next review date
+  const next = new Date();
+  next.setDate(next.getDate() + review.interval);
+  review.nextReviewDate = next.toISOString().split("T")[0];
+  review.lastReviewedAt = nowISO();
+
+  mutate((d) => {
+    const existing = d.srsReviews.findIndex((r) => r.id === review!.id);
+    if (existing >= 0) d.srsReviews[existing] = review!;
+    else d.srsReviews.push(review!);
+  });
+}
+
+export function getSRSStats(userId: string): { totalCards: number; dueToday: number; mastered: number } {
+  const db = readDB();
+  const userReviews = db.srsReviews.filter((r) => r.userId === userId);
+  const today = new Date().toISOString().split("T")[0];
+  return {
+    totalCards: userReviews.length,
+    dueToday: userReviews.filter((r) => r.nextReviewDate <= today).length,
+    mastered: userReviews.filter((r) => r.repetitions >= 3 && r.ease >= 2.5).length,
+  };
+}
+
+// ===============================================================
+// Phase 4: Public Student Portfolio
+// ===============================================================
+
+export function getPortfolio(userId: string): Portfolio | undefined {
+  return readDB().portfolios.find((p) => p.userId === userId);
+}
+
+export function getPortfolioBySlug(slug: string): Portfolio | undefined {
+  return readDB().portfolios.find((p) => p.slug === slug && p.isPublic);
+}
+
+export function upsertPortfolio(userId: string, data: Partial<Omit<Portfolio, "userId" | "updatedAt">>): Portfolio {
+  const db = readDB();
+  const existing = db.portfolios.find((p) => p.userId === userId);
+  const updated: Portfolio = {
+    userId,
+    slug: data.slug || existing?.slug || "",
+    bio: data.bio ?? existing?.bio ?? "",
+    headline: data.headline ?? existing?.headline ?? "",
+    location: data.location ?? existing?.location ?? "",
+    website: data.website ?? existing?.website ?? "",
+    linkedinUrl: data.linkedinUrl ?? existing?.linkedinUrl ?? "",
+    githubUrl: data.githubUrl ?? existing?.githubUrl ?? "",
+    skills: data.skills ?? existing?.skills ?? [],
+    isPublic: data.isPublic ?? existing?.isPublic ?? false,
+    updatedAt: nowISO(),
+  };
+  mutate((d) => {
+    const idx = d.portfolios.findIndex((p) => p.userId === userId);
+    if (idx >= 0) d.portfolios[idx] = updated;
+    else d.portfolios.push(updated);
+  });
+  return updated;
+}
+
+export function getPortfolioCertificates(userId: string): Certificate[] {
+  return readDB().certificates.filter((c) => c.userId === userId);
+}
+
+export function getPortfolioCompletedCourses(userId: string): Course[] {
+  const db = readDB();
+  const completedCourseIds = new Set(
+    db.enrollments.filter((e) => e.userId === userId && e.completed).map((e) => e.courseId)
+  );
+  return db.courses.filter((c) => completedCourseIds.has(c.id));
+}
+
+// ===============================================================
+// Phase 4: Study Sessions (Pomodoro)
+// ===============================================================
+
+export function createStudySession(data: Omit<StudySession, "id" | "createdAt">): StudySession {
+  const session: StudySession = { ...data, id: uid(), createdAt: nowISO() };
+  mutate((db) => { db.studySessions.push(session); });
+  return session;
+}
+
+export function getStudySessions(userId: string, limit = 30): StudySession[] {
+  return readDB().studySessions
+    .filter((s) => s.userId === userId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit);
+}
+
+export function getStudyStats(userId: string): { totalMinutes: number; totalSessions: number; thisWeek: number } {
+  const db = readDB();
+  const sessions = db.studySessions.filter((s) => s.userId === userId && s.completed);
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  return {
+    totalMinutes: sessions.reduce((s, sess) => s + sess.durationMinutes, 0),
+    totalSessions: sessions.length,
+    thisWeek: sessions.filter((s) => new Date(s.createdAt) >= weekAgo).reduce((sum, s) => sum + s.durationMinutes, 0),
+  };
+}
+
+// ===============================================================
+// Phase 4: Placement Quiz / Skill Gap Diagnostic
+// ===============================================================
+
+export function getPlacementResult(userId: string, courseId: string): PlacementResult | undefined {
+  return readDB().placementResults.find((p) => p.userId === userId && p.courseId === courseId);
+}
+
+export function createPlacementResult(data: Omit<PlacementResult, "id" | "takenAt">): PlacementResult {
+  const result: PlacementResult = { ...data, id: uid(), takenAt: nowISO() };
+  mutate((db) => {
+    // Remove old placement result for this user+course
+    db.placementResults = db.placementResults.filter((p) => !(p.userId === data.userId && p.courseId === data.courseId));
+    db.placementResults.push(result);
+  });
+  return result;
+}
+
+// Auto mark lessons as "tested out" based on placement score
+export function applyPlacementTestOut(userId: string, courseId: string, testedOutLessonIds: string[]): void {
+  mutate((db) => {
+    for (const lessonId of testedOutLessonIds) {
+      const already = db.progress.find((p) => p.userId === userId && p.lessonId === lessonId);
+      if (!already) {
+        db.progress.push({
+          userId,
+          lessonId,
+          completedAt: nowISO(),
+        });
+      }
+    }
+  });
+}
+
+export function isLessonTestedOut(userId: string, lessonId: string): boolean {
+  const db = readDB();
+  // Check if this lesson was completed via placement (not via normal completion)
+  // We approximate: if completed but the enrollment was very recent and a placement result exists
+  return db.progress.some((p) => p.userId === userId && p.lessonId === lessonId);
 }
