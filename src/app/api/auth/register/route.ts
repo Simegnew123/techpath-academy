@@ -7,6 +7,8 @@ export async function POST(req: NextRequest) {
   const name = String(body?.name || "").trim();
   const email = String(body?.email || "").trim().toLowerCase();
   const password = String(body?.password || "");
+  const securityQuestion = String(body?.securityQuestion || "").trim();
+  const securityAnswer = String(body?.securityAnswer || "").trim();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: "Name, email and password are required." }, { status: 400 });
@@ -25,6 +27,9 @@ export async function POST(req: NextRequest) {
 
   const isFirstUser = db.users.length === 0;
 
+  // Hash the security answer (if provided) — store lowercased for case-insensitive comparison
+  const answerHash = securityAnswer ? await hashPassword(securityAnswer.toLowerCase()) : "";
+
   const user = {
     id: uid(),
     name,
@@ -33,6 +38,8 @@ export async function POST(req: NextRequest) {
     // First registered user becomes the admin (owner).
     role: (isFirstUser ? "admin" : "student") as "admin" | "student",
     createdAt: nowISO(),
+    securityQuestion: securityQuestion || "",
+    securityAnswerHash: answerHash,
   };
 
   mutate((d) => {
