@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode (toggle via .dark class on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -64,4 +67,22 @@ body {
   padding: 0.15rem 0.35rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
+}
+
+/* Dark mode for lesson content */
+.dark .lesson-content h1,
+.dark .lesson-content h2,
+.dark .lesson-content h3,
+.dark .lesson-content strong {
+  color: #e2e8f0;
+}
+
+.dark .lesson-content p,
+.dark .lesson-content ul,
+.dark .lesson-content ol {
+  color: #cbd5e1;
+}
+
+.dark .lesson-content code {
+  background: #1e293b;
 }
