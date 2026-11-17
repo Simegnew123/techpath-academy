@@ -4,6 +4,7 @@ import {
   updateCourse, deleteCourse,
   getLessons, updateLesson, deleteLesson, addLesson,
   createModule, deleteModule, getModulesForCourse,
+  createCTFChallenge, createLabConfig,
 } from "@/lib/courses";
 import { getCategoryByName } from "@/lib/categories";
 
@@ -58,16 +59,47 @@ export async function PATCH(
       modLessons
         .filter((l: Record<string, unknown>) => l && String(l.title || "").trim())
         .forEach((l: Record<string, unknown>) => {
-          addLesson({
+          const lesson = addLesson({
             moduleId: moduleRecord.id,
             courseId: id,
             title: String(l.title).trim(),
-            type: (String(l.type || "text") as "video" | "text" | "quiz" | "pdf"),
+            type: String(l.type || "text") as "video" | "text" | "quiz" | "pdf" | "ctf" | "lab",
             videoUrl: String(l.videoUrl || ""),
             content: String(l.content || ""),
             duration: Number(l.duration) || 0,
             preview: Boolean(l.preview),
           });
+
+          // Create CTF challenge if this is a CTF lesson
+          if (lesson.type === "ctf" && String(l.ctfFlag || "").trim()) {
+            createCTFChallenge({
+              lessonId: lesson.id,
+              courseId: id,
+              title: lesson.title,
+              description: String(l.ctfDescription || ""),
+              category: String(l.ctfCategory || "misc") as "crypto" | "forensics" | "network" | "web" | "linux" | "reverse" | "misc",
+              difficulty: String(l.ctfDifficulty || "easy") as "easy" | "medium" | "hard" | "expert",
+              flag: String(l.ctfFlag),
+              points: Number(l.ctfPoints) || 50,
+              hint: String(l.ctfHint || ""),
+              maxAttempts: Number(l.ctfMaxAttempts) || 0,
+            });
+          }
+
+          // Create Lab config if this is a Lab lesson
+          if (lesson.type === "lab") {
+            createLabConfig({
+              lessonId: lesson.id,
+              courseId: id,
+              title: lesson.title,
+              description: String(l.content || "").substring(0, 200),
+              type: String(l.labType || "terminal") as "terminal" | "network_sim" | "packet_capture" | "firewall_config" | "cli_challenge",
+              environment: String(l.labEnvironment || "Linux Terminal"),
+              timeLimit: Number(l.labTimeLimit) || 0,
+              steps: Array.isArray(l.labSteps) ? l.labSteps : [],
+              commands: Array.isArray(l.labCommands) ? l.labCommands : [],
+            });
+          }
         });
     }
   } else if (Array.isArray(body?.lessons)) {
