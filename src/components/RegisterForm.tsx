@@ -3,10 +3,21 @@
 import Link from "next/link";
 import { useState } from "react";
 
+const PRESET_QUESTIONS = [
+  "What was the name of your first pet?",
+  "What city were you born in?",
+  "What is your mother's maiden name?",
+  "What was the name of your first school?",
+  "What is your favorite book?",
+  "What was the model of your first computer?",
+];
+
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [securityQuestion, setSecurityQuestion] = useState(PRESET_QUESTIONS[0]);
+  const [securityAnswer, setSecurityAnswer] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +29,7 @@ export default function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, securityQuestion, securityAnswer }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -36,40 +47,71 @@ export default function RegisterForm() {
   return (
     <form onSubmit={submit} className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>
+        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
       )}
       <div>
-        <label className="block text-sm font-medium text-slate-700">Full name</label>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full name</label>
         <input
           type="text"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">Email</label>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
         <input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700">Password</label>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
         <input
           type="password"
           required
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
         <p className="mt-1 text-xs text-slate-400">At least 6 characters.</p>
       </div>
+
+      {/* Security Question */}
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">🔒 Security Question</p>
+        <p className="mt-1 text-xs text-slate-400">
+          Used to recover your password if you forget it. You can skip this, but then only the admin can reset your password.
+        </p>
+        <div className="mt-3">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Question</label>
+          <select
+            value={securityQuestion}
+            onChange={(e) => setSecurityQuestion(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+          >
+            {PRESET_QUESTIONS.map((q) => (
+              <option key={q} value={q}>{q}</option>
+            ))}
+          </select>
+        </div>
+        <div className="mt-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Answer</label>
+          <input
+            type="text"
+            value={securityAnswer}
+            onChange={(e) => setSecurityAnswer(e.target.value)}
+            placeholder="Your answer (case-insensitive)"
+            className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+          />
+        </div>
+      </div>
+
       <button
         type="submit"
         disabled={loading}
@@ -77,7 +119,7 @@ export default function RegisterForm() {
       >
         {loading ? "Creating account..." : "Create account"}
       </button>
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-500 dark:text-slate-400">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-indigo-600 hover:underline">
           Log in
