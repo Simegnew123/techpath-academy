@@ -26,7 +26,7 @@ export function autoSeed() {
     }));
   });
 
-  // 2. Create admin user
+  // 2. Create admin user (with default security question for password recovery)
   const hash = bcrypt.hashSync("admin123", 10);
   const admin = {
     id: uid(),
@@ -38,6 +38,8 @@ export function autoSeed() {
     avatar: "",
     title: "Founder & Lead Instructor",
     createdAt: nowISO(),
+    securityQuestion: "What was the name of your first pet?",
+    securityAnswerHash: bcrypt.hashSync("techpath", 10),
   };
   mutate((d) => { d.users.push(admin); });
   const instructorId = admin.id;
