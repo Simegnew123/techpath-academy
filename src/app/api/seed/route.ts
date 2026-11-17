@@ -29,19 +29,21 @@ export async function POST() {
 
   // 2. Create admin/instructor user
   const db2 = readDB();
-  let admin = db2.users.find((u) => u.email === "admin@techpath.academy");
+  let admin = db2.users.find((u) => u.email === "ademezerihun2013@gmail.com");
   if (!admin) {
     const hash = bcrypt.hashSync("admin123", 10);
     admin = {
       id: uid(),
-      name: "Simegnew",
-      email: "admin@techpath.academy",
+      name: "Simegnew Ademe",
+      email: "ademezerihun2013@gmail.com",
       passwordHash: hash,
       role: "admin",
       bio: "IT educator and founder of TechPath Academy. Passionate about helping students build real-world IT skills.",
       avatar: "",
       title: "Founder & Lead Instructor",
       createdAt: nowISO(),
+      securityQuestion: "What was the name of your first pet?",
+      securityAnswerHash: bcrypt.hashSync("techpath", 10),
     };
     mutate((d) => { d.users.push(admin!); });
   }
