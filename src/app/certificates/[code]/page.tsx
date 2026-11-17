@@ -4,6 +4,7 @@ import { readDB, getCertificateByCode, verifyCertificate } from "@/lib/store";
 import { getCourseById } from "@/lib/courses";
 import QRCode from "qrcode";
 import PrintButton from "./PrintButton";
+import LinkedInButton from "@/components/LinkedInButton";
 
 export const revalidate = 0;
 
@@ -52,11 +53,19 @@ export default async function CertificatePage({
     <div className="min-h-[calc(100vh-4rem)] bg-slate-100 py-10">
       <div className="mx-auto max-w-4xl px-4">
         {/* Action bar */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link href="/dashboard" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
             ← Back to Dashboard
           </Link>
-          <PrintButton />
+          <div className="flex items-center gap-3">
+            <LinkedInButton
+              certificateName={course.title}
+              issueDate={cert.issuedAt}
+              verificationUrl={verifyUrl}
+              certificateId={cert.code}
+            />
+            <PrintButton />
+          </div>
         </div>
 
         {/* Verification banner */}
