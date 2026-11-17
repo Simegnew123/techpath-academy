@@ -22,6 +22,8 @@ import AITutor from "@/components/AITutor";
 import LessonNotes from "@/components/LessonNotes";
 import DiscussionPanel from "@/components/DiscussionPanel";
 import PomodoroTimer from "@/components/PomodoroTimer";
+import CTFChallengeBox from "@/components/CTFChallengeBox";
+import LabTerminal from "@/components/LabTerminal";
 import { getYouTubeEmbed } from "@/lib/video";
 
 export const revalidate = 0;
@@ -121,6 +123,12 @@ export default async function LessonPage({
                 )}
               </>
             )}
+
+            {/* CTF Challenges — shown for "ctf" type lessons, or any lesson that has challenges */}
+            <CTFChallengeBox lessonId={lesson.id} />
+
+            {/* Interactive Lab Terminal — shown for "lab" type lessons */}
+            <LabTerminal lessonId={lesson.id} />
 
             {/* Navigation + Complete */}
             <div className="mt-8 flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
