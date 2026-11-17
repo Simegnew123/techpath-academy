@@ -10,8 +10,10 @@ export default function LoginPage() {
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <LoginForm />
       </div>
-      <p className="mt-6 text-center text-sm text-slate-400">
-        Forgot your password? Contact support — we&apos;ll help you reset it.
+      <p className="mt-6 text-center text-sm text-slate-400 dark:text-slate-500">
+        <Link href="/forgot-password" className="text-indigo-600 hover:underline dark:text-indigo-400">
+          Forgot your password?
+        </Link>
       </p>
     </div>
   );
