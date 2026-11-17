@@ -4,6 +4,7 @@ import { getCourseById, formatPrice } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { getCategoryById, getLessonsForCourse } from "@/lib/store";
 import CheckoutForm from "@/components/CheckoutForm";
+import CurrencyDisplay from "@/components/CurrencyDisplay";
 
 export const revalidate = 0;
 
@@ -38,7 +39,7 @@ export default async function CheckoutPage({
             </div>
             <div className="font-semibold text-slate-900">{course.title}</div>
           </div>
-          <div className="text-xl font-bold">{formatPrice(course.price)}</div>
+          <div className="text-xl font-bold"><CurrencyDisplay priceKES={course.price} /></div>
         </div>
 
         <div className="pt-5">
