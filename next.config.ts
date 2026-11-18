@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const csp = [
   "default-src 'self'",
@@ -6,7 +7,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: https: blob:",
-  "connect-src 'self'",
+  // Allow Sentry ingest endpoints for error reporting
+  "connect-src 'self' https://*.ingest.sentry.io https://sentry.io",
   "media-src 'self' https: blob:",
   "frame-ancestors 'none'",
   "form-action 'self'",
@@ -42,4 +44,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap Next.js config with Sentry.
+// Source map upload is disabled when SENTRY_AUTH_TOKEN is not set,
+// so builds work without any Sentry credentials.
+export default withSentryConfig(nextConfig, {
+  // Do not upload source maps unless auth token is set
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
+  // Silence build-time logs
+  silent: true,
+});
