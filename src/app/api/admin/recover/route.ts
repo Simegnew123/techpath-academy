@@ -21,6 +21,29 @@ import bcrypt from "bcryptjs";
 const OWNER_EMAIL = "ademezerihun2013@gmail.com";
 const OWNER_SECURITY_ANSWER = "techpath";
 
+// GET /api/admin/recover — public diagnostic: shows admin account status
+// No authentication required — only reveals whether the owner email exists and its role
+export async function GET() {
+  const db = readDB();
+  const owner = db.users.find((u) => u.email === OWNER_EMAIL);
+  const allAdmins = db.users.filter((u) => u.role === "admin");
+
+  return NextResponse.json({
+    ownerEmail: OWNER_EMAIL,
+    ownerExists: !!owner,
+    ownerRole: owner?.role || "NOT_FOUND",
+    totalUsers: db.users.length,
+    totalAdmins: allAdmins.length,
+    adminEmails: allAdmins.map((u) => ({ email: u.email, name: u.name, role: u.role })),
+    coursesExist: db.courses.length > 0,
+    hint: !owner
+      ? "Admin account does NOT exist. POST to this endpoint with {email, securityAnswer, password} to create it."
+      : owner.role !== "admin"
+      ? "Admin account exists but role is '" + owner.role + "'. POST to promote to admin."
+      : "Admin account is correctly set up. You should be able to log in.",
+  });
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const email = String(body?.email || "").trim().toLowerCase();
