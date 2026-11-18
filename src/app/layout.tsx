@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Script from "next/script";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import CommandPalette from "@/components/CommandPalette";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const BASE_URL = "https://techpath-academy.onrender.com";
 
@@ -79,6 +81,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <CommandPalette />
+          <GoogleAnalytics />
         </ThemeProvider>
       </body>
     </html>
