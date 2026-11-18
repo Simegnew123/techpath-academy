@@ -3,7 +3,7 @@ services:
     name: techpath-academy
     env: node
     plan: free
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm run start
     healthCheckPath: /
     envVars:
@@ -13,6 +13,16 @@ services:
         value: demo
       - key: NEXTAUTH_SECRET
         generateValue: true
+      # Sentry error monitoring (free tier) — get DSN from sentry.io
+      # Client-side DSN is exposed to browser (safe — it's a public key)
+      - key: NEXT_PUBLIC_SENTRY_DSN
+        sync: false
+      # Server-side DSN (same value, used in sentry.server.config.ts)
+      - key: SENTRY_DSN
+        sync: false
+      # Optional: for source map upload at build time (leave empty to skip)
+      - key: SENTRY_AUTH_TOKEN
+        sync: false
     disk:
       name: lms-data
       mountPath: /opt/render/project/src/data
