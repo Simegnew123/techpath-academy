@@ -8,8 +8,39 @@ import bcrypt from "bcryptjs";
 export function autoSeed() {
   try {
     const db = readDB();
+
+    // ── Always ensure the admin account exists (even if courses already seeded) ──
+    const adminEmail = "ademezerihun2013@gmail.com";
+    const existingAdmin = db.users.find((u) => u.email === adminEmail);
+    if (!existingAdmin) {
+      console.log("[autoseed] Admin user missing — creating admin account...");
+      const hash = bcrypt.hashSync("admin123", 10);
+      const admin = {
+        id: uid(),
+        name: "Simegnew Ademe",
+        email: adminEmail,
+        passwordHash: hash,
+        role: "admin" as const,
+        bio: "IT educator and founder of TechPath Academy. Passionate about helping students build real-world IT skills.",
+        avatar: "",
+        title: "Founder & Lead Instructor",
+        createdAt: nowISO(),
+        securityQuestion: "What was the name of your first pet?",
+        securityAnswerHash: bcrypt.hashSync("techpath", 10),
+      };
+      mutate((d) => { d.users.push(admin); });
+      console.log("[autoseed] ✅ Admin account created: " + adminEmail);
+    } else if (existingAdmin.role !== "admin") {
+      console.log("[autoseed] Promoting " + adminEmail + " to admin role...");
+      mutate((d) => {
+        const u = d.users.find((u) => u.email === adminEmail);
+        if (u) u.role = "admin" as const;
+      });
+      console.log("[autoseed] ✅ Admin role granted to " + adminEmail);
+    }
+
     if (db.courses.length > 0) {
-      console.log("[autoseed] Database already has courses — skipping seed.");
+      console.log("[autoseed] Database already has courses — skipping course seed.");
       return;
     }
 
@@ -26,23 +57,9 @@ export function autoSeed() {
     }));
   });
 
-  // 2. Create admin user (with default security question for password recovery)
-  const hash = bcrypt.hashSync("admin123", 10);
-  const admin = {
-    id: uid(),
-    name: "Simegnew Ademe",
-    email: "ademezerihun2013@gmail.com",
-    passwordHash: hash,
-    role: "admin" as const,
-    bio: "IT educator and founder of TechPath Academy. Passionate about helping students build real-world IT skills.",
-    avatar: "",
-    title: "Founder & Lead Instructor",
-    createdAt: nowISO(),
-    securityQuestion: "What was the name of your first pet?",
-    securityAnswerHash: bcrypt.hashSync("techpath", 10),
-  };
-  mutate((d) => { d.users.push(admin); });
-  const instructorId = admin.id;
+  // 2. Get admin user ID (already created above — just look it up)
+  const adminUser = readDB().users.find((u) => u.email === "ademezerihun2013@gmail.com");
+  const instructorId = adminUser?.id || uid();
 
   // 3. Create courses (same as seed route)
   const c1 = createCourse({
