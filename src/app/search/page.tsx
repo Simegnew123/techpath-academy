@@ -56,8 +56,8 @@ function SearchContent() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">Search Courses</h1>
-      <p className="text-slate-500 mb-6">Find courses by title, instructor, or topic</p>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2 dark:text-slate-100">Search Courses</h1>
+      <p className="text-slate-500 mb-6 dark:text-slate-400">Find courses by title, instructor, or topic</p>
 
       {/* Search input */}
       <div className="mb-6">
@@ -66,7 +66,7 @@ function SearchContent() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for courses, topics, instructors..."
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-lg outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"
           aria-label="Search courses"
         />
       </div>
@@ -76,7 +76,7 @@ function SearchContent() {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           aria-label="Filter by category"
         >
           <option value="">All Categories</option>
@@ -88,7 +88,7 @@ function SearchContent() {
         <select
           value={level}
           onChange={(e) => setLevel(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           aria-label="Filter by level"
         >
           <option value="">All Levels</option>
@@ -97,19 +97,19 @@ function SearchContent() {
           <option value="Advanced">Advanced</option>
         </select>
 
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
           <input
             type="checkbox"
             checked={freeOnly}
             onChange={(e) => setFreeOnly(e.target.checked)}
-            className="rounded border-slate-300"
+            className="rounded border-slate-300 dark:border-slate-600"
           />
           Free only
         </label>
       </div>
 
       {/* Results */}
-      <div className="mb-4 text-sm text-slate-500">
+      <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         {loading ? "Searching..." : `${results.length} course${results.length !== 1 ? "s" : ""} found`}
       </div>
 

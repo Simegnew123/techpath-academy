@@ -50,38 +50,38 @@ export default function SearchBar() {
           onKeyDown={(e) => { if (e.key === "Enter") goToSearch(); }}
           onFocus={() => setShow(true)}
           placeholder="Search courses..."
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"
           aria-label="Search courses"
         />
       </div>
 
       {show && query.trim().length >= 2 && (
-        <div className="absolute top-full mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg z-50">
+        <div className="absolute top-full mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg z-50 dark:border-slate-700 dark:bg-slate-800">
           {loading ? (
-            <p className="p-3 text-center text-sm text-slate-400">Searching...</p>
+            <p className="p-3 text-center text-sm text-slate-400 dark:text-slate-500">Searching...</p>
           ) : results.length === 0 ? (
-            <p className="p-3 text-center text-sm text-slate-400">No results</p>
+            <p className="p-3 text-center text-sm text-slate-400 dark:text-slate-500">No results</p>
           ) : (
             <ul role="listbox">
               {results.map((c) => (
                 <li key={c.id}>
                   <button
                     onClick={() => { router.push(`/courses/${c.slug}`); setShow(false); setQuery(""); }}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-slate-50"
+                    className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-700"
                     role="option"
                   >
                     <div>
-                      <p className="text-sm font-medium text-slate-800">{c.title}</p>
-                      <p className="text-xs text-slate-400">{c.instructor} · {c.level}</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{c.title}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{c.instructor} · {c.level}</p>
                     </div>
-                    <span className="text-xs text-slate-500">{c.price === 0 ? "FREE" : `KES ${c.price}`}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{c.price === 0 ? "FREE" : `KES ${c.price}`}</span>
                   </button>
                 </li>
               ))}
               <li>
                 <button
                   onClick={goToSearch}
-                  className="w-full border-t border-slate-100 px-3 py-2 text-center text-xs text-indigo-600 hover:bg-indigo-50"
+                  className="w-full border-t border-slate-100 px-3 py-2 text-center text-xs text-indigo-600 hover:bg-indigo-50 dark:border-slate-700 dark:text-indigo-400 dark:hover:bg-indigo-950"
                 >
                   View all results →
                 </button>

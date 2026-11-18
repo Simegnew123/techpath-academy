@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         placeholder="Search by name, email, or role..."
-        className="mb-4 w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        className="mb-4 w-full max-w-md rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"
         aria-label="Filter users"
       />
 
