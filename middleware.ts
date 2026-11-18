@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-const SESSION_COOKIE = "techpath_session";
+const SESSION_COOKIE = "lms_session";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

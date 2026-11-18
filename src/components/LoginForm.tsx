@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mfaCode, setMfaCode] = useState("");
@@ -33,7 +36,7 @@ export default function LoginForm() {
         setLoading(false);
         return;
       }
-      window.location.href = "/dashboard";
+      window.location.href = redirectTo;
     } catch {
       setError("Something went wrong. Try again.");
       setLoading(false);
@@ -56,7 +59,7 @@ export default function LoginForm() {
         setLoading(false);
         return;
       }
-      window.location.href = "/dashboard";
+      window.location.href = redirectTo;
     } catch {
       setError("Something went wrong. Try again.");
       setLoading(false);
