@@ -1,9 +1,23 @@
+import type { Metadata } from "next";
 import CourseCard from "@/components/CourseCard";
 import { getCourses } from "@/lib/courses";
 import { CATEGORIES } from "@/lib/categories";
 import { buildCourseCardData } from "@/lib/courseData";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Browse Courses — IT, Networking, Security & AI",
+  description:
+    "Explore hands-on IT courses in IT Support, Networking, Database Administration, Cyber Security, Ethical Hacking, and Artificial Intelligence. Free tutorials and premium lab-based training.",
+  alternates: { canonical: "/courses" },
+  openGraph: {
+    title: "Browse Courses — TechPath Academy",
+    description:
+      "Hands-on IT courses: IT Support, Networking, Cyber Security, Database Administration, and AI. Free and premium options.",
+    url: "/courses",
+  },
+};
 
 export default async function CoursesPage({
   searchParams,

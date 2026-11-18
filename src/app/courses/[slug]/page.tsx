@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -26,6 +27,56 @@ import PrerequisiteCheck from "@/components/PrerequisiteCheck";
 import CurrencyDisplay from "@/components/CurrencyDisplay";
 
 export const revalidate = 0;
+
+// ── Dynamic SEO metadata per course ──
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const course = getCourseBySlug(slug);
+  if (!course) {
+    return {
+      title: "Course Not Found",
+      description: "The requested course could not be found.",
+    };
+  }
+  const category = getCategoryById(course.categoryId);
+  const instructor = course.instructorId ? getInstructor(course.instructorId) : undefined;
+  const avgRating = getAverageRating(course.id);
+  const allLessons = getLessonsForCourse(course.id);
+  const totalDuration = allLessons.reduce((s, l) => s + (l.duration || 0), 0);
+
+  const desc = course.description.slice(0, 155);
+  const title = `${course.title} — ${course.level} IT Course`;
+
+  return {
+    title,
+    description: desc,
+    keywords: [
+      course.title,
+      category?.name || "IT",
+      course.level,
+      "IT course",
+      "online training",
+      "lab-based",
+      instructor?.name || "TechPath Academy",
+    ].filter(Boolean),
+    alternates: { canonical: `/courses/${course.slug}` },
+    openGraph: {
+      type: "website",
+      title: `${course.title} | TechPath Academy`,
+      description: desc,
+      url: `/courses/${course.slug}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${course.title} | TechPath Academy`,
+      description: desc,
+    },
+  };
+}
 
 function Stars({ rating, size = "text-sm" }: { rating: number; size?: string }) {
   return (

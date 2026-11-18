@@ -435,6 +435,50 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===============================================
+          SEO: JSON-LD structured data — EducationalOrganization
+          Helps Google show rich results (courses, ratings)
+          =============================================== */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "EducationalOrganization",
+            name: "TechPath Academy",
+            url: "https://techpath-academy.onrender.com",
+            description:
+              "Lab-based IT training platform offering courses in IT Support, Networking, Cyber Security, Database Administration, and AI.",
+            founder: {
+              "@type": "Person",
+              name: "Simegnew Ademe",
+            },
+            knowsAbout: [
+              "IT Support",
+              "Networking",
+              "Cyber Security",
+              "Ethical Hacking",
+              "Database Administration",
+              "Artificial Intelligence",
+            ],
+            hasOfferCatalog: {
+              "@type": "OfferCatalog",
+              name: "IT Training Courses",
+              itemListElement: published.slice(0, 6).map((c) => ({
+                "@type": "Course",
+                name: c.title,
+                description: c.description.slice(0, 200),
+                provider: {
+                  "@type": "EducationalOrganization",
+                  name: "TechPath Academy",
+                  url: "https://techpath-academy.onrender.com",
+                },
+              })),
+            },
+          }),
+        }}
+      />
     </div>
   );
 }
