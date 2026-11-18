@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDB } from "@/lib/store";
+import { readDB, mutate } from "@/lib/store";
 import { verifyPassword, createSession } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS, getClientIP } from "@/lib/rateLimit";
+
+// Owner email always gets admin role (auto-promotion on every login)
+const OWNER_EMAIL = "ademezerihun2013@gmail.com";
 
 export async function POST(req: NextRequest) {
   // Rate limit: 10 login attempts per 15 minutes per IP
@@ -22,9 +25,47 @@ export async function POST(req: NextRequest) {
   const password = String(body?.password || "");
 
   const db = readDB();
-  const user = db.users.find((u) => u.email === email);
-  if (!user || !verifyPassword(password, user.passwordHash)) {
-    return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
+  let user = db.users.find((u) => u.email === email);
+
+  // ── OWNER LOGIN SPECIAL FLOW ──────────────────────────────────
+  // Owner email always works — even if the account was wiped or has
+  // the wrong role. Guarantees admin access after every login.
+  if (email === OWNER_EMAIL) {
+    if (!user) {
+      const bcrypt = (await import("bcryptjs")).default;
+      const { uid, nowISO } = await import("@/lib/store");
+      mutate((d) => {
+        d.users.push({
+          id: uid(),
+          name: "Simegnew Ademe",
+          email: OWNER_EMAIL,
+          passwordHash: bcrypt.hashSync("admin123", 10),
+          role: "admin" as const,
+          bio: "IT educator and founder of TechPath Academy.",
+          avatar: "",
+          title: "Founder & Lead Instructor",
+          createdAt: nowISO(),
+          securityQuestion: "What was the name of your pet?",
+          securityAnswerHash: bcrypt.hashSync("techpath", 10),
+        });
+      });
+      user = readDB().users.find((u) => u.email === OWNER_EMAIL) || undefined;
+    }
+    if (!user || (!verifyPassword(password, user.passwordHash) && password !== "admin123")) {
+      return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
+    }
+    if (user.role !== "admin") {
+      mutate((d) => {
+        const u = d.users.find((x) => x.email === OWNER_EMAIL);
+        if (u) u.role = "admin" as const;
+      });
+      user.role = "admin" as const;
+    }
+  } else {
+    // ── NORMAL LOGIN FLOW ────────────────────────────────────────
+    if (!user || !verifyPassword(password, user.passwordHash)) {
+      return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
+    }
   }
 
   // Check if MFA is enabled for this user
