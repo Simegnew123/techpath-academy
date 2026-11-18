@@ -106,11 +106,21 @@ h1, h2, h3, h4, h5, h6 {
 /* ==========================================================
    GLOBAL DARK-MODE FALLBACKS
    ----------------------------------------------------------
-   Uses :where() for ZERO specificity so that:
-   - Tailwind dark: utilities (dark:bg-slate-800, dark:text-slate-100, etc.)
-     ALWAYS override these defaults (utilities layer > base layer, equal specificity)
-   - Pages built BEFORE dark mode (Phase 1-3) get sensible dark colors automatically
-   - Pages built WITH dark mode (Phase 4+) are unaffected
+   Two-part strategy:
+
+   1. FORM ELEMENTS (input, textarea, select) — kept in @layer base.
+      These target HTML tags (not classes), so no Tailwind utility
+      competes and the base-layer rules apply correctly.
+
+   2. CLASS-BASED FALLBACKS (.bg-white, .text-slate-*, .border-slate-*)
+      — placed OUTSIDE @layer (unlayered CSS).  Unlayered styles beat
+      ALL layered styles (base, components, utilities) regardless of
+      specificity.  We still use :where() for zero specificity so that:
+        - When an element has bg-white + dark:bg-slate-800, both the
+          fallback and the utility set the SAME value (#1e293b) → no
+          visible conflict.
+        - The certificate ID selector (#certificate, specificity 1,1,0)
+          still overrides these (0,1,0) rules.
    ========================================================== */
 
 @layer base {
@@ -134,40 +144,52 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;
     transition: background-color 9999s ease-in-out 0s;
   }
-
-  /* ---- White card / form containers → dark ---- */
-  /* Exclude <a> and <button> so hero buttons / CTAs keep their white bg */
-  .dark :where(.bg-white):where(:not(a, button)) {
-    background-color: #1e293b;   /* slate-800 */
-  }
-
-  /* ---- Light backgrounds → dark ---- */
-  .dark :where(.bg-slate-50)  { background-color: #0f172a; } /* slate-900 */
-  .dark :where(.bg-slate-100) { background-color: #1e293b; } /* slate-800 */
-
-  /* ---- Light borders → dark ---- */
-  .dark :where(.border-slate-200) { border-color: #334155; } /* slate-700 */
-  .dark :where(.border-slate-300) { border-color: #475569; } /* slate-600 */
-
-  /* ---- Dark text → light in dark mode ---- */
-  .dark :where(.text-slate-900) { color: #f1f5f9; } /* slate-100 */
-  .dark :where(.text-slate-800) { color: #e2e8f0; } /* slate-200 */
-  .dark :where(.text-slate-700) { color: #cbd5e1; } /* slate-300 */
-  .dark :where(.text-slate-600) { color: #94a3b8; } /* slate-400 */
-  .dark :where(.text-slate-500) { color: #94a3b8; } /* slate-400 */
-  .dark :where(.text-slate-400) { color: #64748b; } /* slate-500 */
-  .dark :where(.text-gray-700)  { color: #cbd5e1; } /* slate-300 */
-  .dark :where(.text-gray-600)  { color: #94a3b8; } /* slate-400 */
-
-  /* ---- Light tinted backgrounds → dark equivalents ---- */
-  .dark :where(.bg-indigo-50)  { background-color: #1e1b4b; } /* indigo-950-ish */
-  .dark :where(.bg-blue-50)    { background-color: #172554; }
-  .dark :where(.bg-green-50)   { background-color: #052e16; }
-  .dark :where(.bg-red-50)     { background-color: #450a0a; }
-  .dark :where(.bg-yellow-50)  { background-color: #422006; }
-  .dark :where(.bg-purple-50)  { background-color: #2e1065; }
-  .dark :where(.bg-amber-50)   { background-color: #451a03; }
 }
+
+/* ---- UNLAYERED class-based fallbacks (beat utilities layer) ---- */
+
+/* White card / form containers → dark slate-800
+   Exclude <a> and <button> so hero buttons / CTAs keep their white bg */
+.dark :where(.bg-white):where(:not(a, button)) {
+  background-color: #1e293b;   /* slate-800 */
+}
+
+/* Light backgrounds → dark */
+.dark :where(.bg-slate-50)  { background-color: #0f172a; } /* slate-900 */
+.dark :where(.bg-slate-100) { background-color: #1e293b; } /* slate-800 */
+
+/* Light borders → dark */
+.dark :where(.border-slate-200) { border-color: #334155; } /* slate-700 */
+.dark :where(.border-slate-300) { border-color: #475569; } /* slate-600 */
+
+/* Dark text → light in dark mode */
+.dark :where(.text-slate-900) { color: #f1f5f9; } /* slate-100 */
+.dark :where(.text-slate-800) { color: #e2e8f0; } /* slate-200 */
+.dark :where(.text-slate-700) { color: #cbd5e1; } /* slate-300 */
+.dark :where(.text-slate-600) { color: #94a3b8; } /* slate-400 */
+.dark :where(.text-slate-500) { color: #94a3b8; } /* slate-400 */
+.dark :where(.text-slate-400) { color: #64748b; } /* slate-500 */
+.dark :where(.text-gray-700)  { color: #cbd5e1; } /* slate-300 */
+.dark :where(.text-gray-600)  { color: #94a3b8; } /* slate-400 */
+
+/* Light tinted backgrounds → dark equivalents */
+.dark :where(.bg-indigo-50)  { background-color: #1e1b4b; }
+.dark :where(.bg-blue-50)    { background-color: #172554; }
+.dark :where(.bg-green-50)   { background-color: #052e16; }
+.dark :where(.bg-red-50)     { background-color: #450a0a; }
+.dark :where(.bg-yellow-50)  { background-color: #422006; }
+.dark :where(.bg-purple-50)  { background-color: #2e1065; }
+.dark :where(.bg-amber-50)   { background-color: #451a03; }
+
+/* ---- Hover states for light backgrounds ---- */
+.dark :where(.hover\:bg-slate-50:hover)  { background-color: #1e293b; }
+.dark :where(.hover\:bg-slate-100:hover) { background-color: #334155; }
+.dark :where(.hover\:bg-white:hover)     { background-color: #334155; }
+
+/* ---- Table headers / striped rows ---- */
+.dark :where(.bg-slate-50\/80)  { background-color: rgba(15, 23, 42, 0.8); }
+.dark :where(.odd\:bg-slate-50) { background-color: #0f172a; }
+.dark :where(.even\:bg-slate-50) { background-color: #1e293b; }
 
 /* ==========================================================
    CERTIFICATE PAGE — always looks like a white paper document
