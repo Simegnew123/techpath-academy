@@ -69,35 +69,39 @@ export default function LoginForm() {
   // MFA step
   if (mfaUserId) {
     return (
-      <form onSubmit={verifyMFA} className="space-y-4">
+      <form onSubmit={verifyMFA} className="space-y-4" aria-label="Two-factor authentication form">
         <div className="text-center">
-          <div className="text-4xl">🔐</div>
+          <div className="text-4xl" aria-hidden="true">🔐</div>
           <h2 className="mt-2 text-lg font-semibold text-slate-800 dark:text-slate-200">Two-Factor Authentication</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p id="mfa-desc" className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Enter the 6-digit code from your authenticator app.
           </p>
         </div>
         {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
+          <div role="alert" aria-live="assertive" className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
         )}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Authenticator Code</label>
+          <label htmlFor="mfa-code" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Authenticator Code</label>
           <input
+            id="mfa-code"
             type="text"
             required
             autoFocus
             inputMode="numeric"
+            autoComplete="one-time-code"
             pattern="[0-9]*"
             maxLength={6}
             value={mfaCode}
             onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
             placeholder="000000"
+            aria-describedby="mfa-desc"
             className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-center text-2xl tracking-widest focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
         <button
           type="submit"
           disabled={loading || mfaCode.length !== 6}
+          aria-disabled={loading || mfaCode.length !== 6}
           className="w-full rounded-lg bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
         >
           {loading ? "Verifying..." : "Verify & Log In"}
@@ -114,25 +118,29 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-4" aria-label="Login form">
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
+        <div role="alert" aria-live="assertive" className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
       )}
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+        <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
         <input
+          id="login-email"
           type="email"
           required
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+        <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
         <input
+          id="login-password"
           type="password"
           required
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
@@ -141,6 +149,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={loading}
+        aria-disabled={loading}
         className="w-full rounded-lg bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
       >
         {loading ? "Logging in..." : "Log in"}
