@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCourseById, enroll, formatPrice } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { readDB, mutate, uid, nowISO, createNotification, notifyAdmins } from "@/lib/store";
+import { sendPaymentReceiptEmail, sendAdminNotificationEmail } from "@/lib/email";
 
 // Methods that go through Flutterwave in live mode
 const FLUTTERWAVE_METHODS = ["card", "mpesa"];
@@ -70,6 +71,9 @@ export async function POST(
       `${user.name} enrolled in "${course.title}" (${formatPrice(course.price)} via ${method})`,
       `/admin`
     );
+
+    // Send payment receipt email (non-blocking)
+    sendPaymentReceiptEmail(user.name, user.email, course.title, course.slug, course.price, process.env.CURRENCY || "KES", method, ref).catch(() => {});
 
     return NextResponse.json({ redirect: `/dashboard?purchased=1&course=${course.slug}` });
   }
