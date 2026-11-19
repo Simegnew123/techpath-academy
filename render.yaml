@@ -50,6 +50,10 @@ services:
       - key: CBE_ACCOUNT_NAME
         sync: false
 
+      # ── Admin contact email ──
+      - key: ADMIN_EMAIL
+        sync: false
+
       # ── Security ──
       - key: NEXTAUTH_SECRET
         generateValue: true
