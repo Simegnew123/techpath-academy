@@ -52,17 +52,26 @@ export default function SearchBar() {
           placeholder="Search courses..."
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"
           aria-label="Search courses"
+          aria-expanded={show && query.trim().length >= 2}
+          aria-controls="search-results"
+          role="combobox"
+          aria-autocomplete="list"
         />
       </div>
 
+      {/* Screen reader live region for search status */}
+      <div className="sr-only" aria-live="polite" role="status">
+        {loading ? "Searching..." : show && query.trim().length >= 2 && results.length === 0 ? "No results found" : ""}
+      </div>
+
       {show && query.trim().length >= 2 && (
-        <div className="absolute top-full mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg z-50 dark:border-slate-700 dark:bg-slate-800">
+        <div id="search-results" className="absolute top-full mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg z-50 dark:border-slate-700 dark:bg-slate-800">
           {loading ? (
             <p className="p-3 text-center text-sm text-slate-400 dark:text-slate-500">Searching...</p>
           ) : results.length === 0 ? (
             <p className="p-3 text-center text-sm text-slate-400 dark:text-slate-500">No results</p>
           ) : (
-            <ul role="listbox">
+            <ul role="listbox" aria-label="Search results">
               {results.map((c) => (
                 <li key={c.id}>
                   <button
