@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getCourseById, formatPrice } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { getCategoryById, getLessonsForCourse } from "@/lib/store";
+import { getPaymentConfig, getManualPaymentInfo } from "@/lib/payments";
 import CheckoutForm from "@/components/CheckoutForm";
 import CurrencyDisplay from "@/components/CurrencyDisplay";
 
@@ -22,9 +23,25 @@ export default async function CheckoutPage({
 
   if (course.price === 0) redirect(`/courses/${course.slug}`);
 
-  const demoMode = (process.env.PAYMENT_MODE || "demo") !== "live";
+  const config = getPaymentConfig();
+  const demoMode = config.demoMode;
   const category = getCategoryById(course.categoryId);
   const lessonCount = getLessonsForCourse(course.id).length;
+
+  // Build method config for the client component
+  const methodConfig = demoMode ? null : {
+    telebirr: config.methods.telebirr.available,
+    cbe: config.methods.cbe.available,
+    paypal: config.methods.paypal.available,
+    card: config.methods.card.available,
+    mpesa: config.methods.mpesa.available,
+  };
+
+  // Manual payment info (server-side, passed to client)
+  const manualInfo = {
+    telebirr: getManualPaymentInfo("telebirr"),
+    cbe: getManualPaymentInfo("cbe"),
+  };
 
   return (
     <div className="mx-auto max-w-lg px-4 py-14">
@@ -47,6 +64,8 @@ export default async function CheckoutPage({
             courseId={course.id}
             price={course.price}
             demoMode={demoMode}
+            methodConfig={methodConfig}
+            manualInfo={manualInfo}
           />
         </div>
       </div>
