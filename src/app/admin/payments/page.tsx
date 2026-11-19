@@ -236,7 +236,8 @@ export default async function AdminPaymentsPage() {
                 <th className="px-4 py-3">Course</th>
                 <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3">Method</th>
-                <th className="px-4 py-3">Reference</th>
+                <th className="px-4 py-3">Student TX ID</th>
+                <th className="px-4 py-3">System Ref</th>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Action</th>
               </tr>
@@ -245,6 +246,9 @@ export default async function AdminPaymentsPage() {
               {pendingPayments.map((p) => {
                 const u = userMap.get(p.userId);
                 const c = courseMap.get(p.courseId);
+                const hasTxId = p.ref.includes("|TXID:");
+                const systemRef = hasTxId ? p.ref.split("|TXID:")[0] : p.ref;
+                const studentTxId = hasTxId ? p.ref.split("|TXID:")[1] : "";
                 return (
                   <tr key={p.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
@@ -258,23 +262,34 @@ export default async function AdminPaymentsPage() {
                         {p.method === "telebirr" ? "Telebirr" : "CBE"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.ref}</td>
+                    <td className="px-4 py-3">
+                      {hasTxId ? (
+                        <span className="font-mono text-sm font-bold text-green-700">{studentTxId}</span>
+                      ) : (
+                        <span className="text-xs italic text-slate-400">Not submitted yet</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{systemRef}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">
                       {new Date(p.createdAt).toLocaleString()}
                     </td>
                     <td className="px-4 py-3">
-                      <PaymentActions
-                        payment={{
-                          id: p.id,
-                          userName: u?.name || "Unknown",
-                          userEmail: u?.email || "",
-                          courseTitle: c?.title || "",
-                          amount: p.amount,
-                          method: p.method,
-                          ref: p.ref,
-                          createdAt: p.createdAt,
-                        }}
-                      />
+                      {hasTxId ? (
+                        <PaymentActions
+                          payment={{
+                            id: p.id,
+                            userName: u?.name || "Unknown",
+                            userEmail: u?.email || "",
+                            courseTitle: c?.title || "",
+                            amount: p.amount,
+                            method: p.method,
+                            ref: p.ref,
+                            createdAt: p.createdAt,
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs text-slate-400">Waiting for TX ID</span>
+                      )}
                     </td>
                   </tr>
                 );
