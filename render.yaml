@@ -54,6 +54,23 @@ services:
       - key: ADMIN_EMAIL
         sync: false
 
+      # ── Email / SMTP Configuration ──
+      # Used for: welcome emails, payment receipts, course completion emails
+      # Works with: Gmail, Outlook, Amazon SES, Brevo, SendGrid, Mailgun
+      # Gmail example: SMTP_HOST=smtp.gmail.com SMTP_PORT=587 SMTP_USER=you@gmail.com SMTP_PASS=your-app-password
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM_NAME
+        sync: false
+      - key: SMTP_FROM_EMAIL
+        sync: false
+
       # ── Security ──
       - key: NEXTAUTH_SECRET
         generateValue: true
