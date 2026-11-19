@@ -9,6 +9,16 @@ export function autoSeed() {
   try {
     const db = readDB();
 
+    // ── DB Migration: ensure all arrays exist (fixes 500 on checkout for old DBs) ──
+    // Old databases created before notifications/books features are missing these arrays,
+    // causing createNotification() to crash with "Cannot read properties of undefined"
+    mutate((d) => {
+      let fixed = false;
+      if (!d.notifications) { d.notifications = []; fixed = true; }
+      if (!d.books) { d.books = []; fixed = true; }
+      if (fixed) console.log("[autoseed] DB migration: added missing arrays (notifications/books)");
+    });
+
     // ── Always ensure the admin account exists (even if courses already seeded) ──
     const adminEmail = "ademezerihun2013@gmail.com";
     const existingAdmin = db.users.find((u) => u.email === adminEmail);
