@@ -80,7 +80,7 @@ export interface ManualPaymentInfo {
 export function getManualPaymentInfo(method: "telebirr" | "cbe"): ManualPaymentInfo {
   if (method === "telebirr") {
     return {
-      account: process.env.TELEBIRR_ACCOUNT || "0912-345-678",
+      account: process.env.TELEBIRR_ACCOUNT || "0953606399",
       name: process.env.TELEBIRR_ACCOUNT_NAME || "TechPath Academy",
       note: "Open the Telebirr app or dial *127# → Send Money → Enter the number above. Use your email as the reference.",
     };
