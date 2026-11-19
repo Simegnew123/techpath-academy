@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getCourseById, enroll, formatPrice } from "@/lib/courses";
 import { readDB, mutate, createNotification, notifyAdmins, uid, nowISO } from "@/lib/store";
+import { sendPaymentReceiptEmail } from "@/lib/email";
 
 /**
  * POST /api/payments/admin-verify
@@ -84,6 +85,19 @@ export async function POST(req: NextRequest) {
       `${user.name} approved a ${methodName} payment of ${formatPrice(payment.amount)} for "${course?.title || "course"}"`,
       `/admin/payments`
     );
+
+    // Send payment receipt email to student (non-blocking)
+    const student = readDB().users.find((u) => u.id === payment.userId);
+    if (student && course) {
+      sendPaymentReceiptEmail(
+        student.name, student.email,
+        course.title, course.slug,
+        payment.amount,
+        process.env.CURRENCY || "KES",
+        payment.method,
+        payment.ref
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ success: true, status: "paid" });
   }
