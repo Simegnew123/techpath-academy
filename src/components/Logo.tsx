@@ -1,11 +1,19 @@
-export default function Logo({ className = "h-8 w-8" }: { className?: string }) {
+export default function Logo({
+  className = "h-8 w-8",
+  "aria-hidden": ariaHidden,
+}: {
+  className?: string;
+  "aria-hidden"?: boolean | "true" | "false";
+}) {
   return (
     <svg
       className={className}
       viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="TechPath Academy logo"
+      role={ariaHidden ? undefined : "img"}
+      aria-hidden={ariaHidden}
+      aria-label={ariaHidden ? undefined : "TechPath Academy logo"}
     >
       {/* Rounded square background */}
       <rect width="40" height="40" rx="10" fill="url(#tp-grad)" />
