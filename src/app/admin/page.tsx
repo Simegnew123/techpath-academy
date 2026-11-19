@@ -101,6 +101,12 @@ export default async function AdminPage() {
               >
                 📊 Analytics
               </Link>
+              <Link
+                href="/admin/payments"
+                className="rounded-xl border border-green-300 bg-green-50 px-5 py-2.5 font-semibold text-green-700 transition hover:bg-green-100"
+              >
+                💳 Payments
+              </Link>
             </>
           )}
           <Link
