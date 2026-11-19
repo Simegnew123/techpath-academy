@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCourseById, enroll, formatPrice } from "@/lib/courses";
 import { readDB, mutate, createNotification, notifyAdmins } from "@/lib/store";
+import { sendPaymentReceiptEmail } from "@/lib/email";
 import {
   verifyFlutterwavePayment,
   capturePayPalPayment,
@@ -108,7 +109,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.redirect(new URL("/dashboard?purchase=failed&reason=cancelled", req.url));
 }
 
-// ── Helper: send enrollment + payment notifications ──
+// ── Helper: send enrollment + payment notifications + email ──
 function sendPaymentNotifications(
   userId: string,
   course: ReturnType<typeof getCourseById>,
@@ -116,6 +117,9 @@ function sendPaymentNotifications(
   ref: string
 ) {
   if (!course) return;
+
+  const db = readDB();
+  const user = db.users.find((u) => u.id === userId);
 
   createNotification({
     userId,
@@ -136,4 +140,16 @@ function sendPaymentNotifications(
     `A student enrolled in "${course.title}" (${formatPrice(course.price)} via ${methodName})`,
     `/admin`
   );
+
+  // Send payment receipt email (non-blocking)
+  if (user) {
+    sendPaymentReceiptEmail(
+      user.name, user.email,
+      course.title, course.slug,
+      course.price,
+      process.env.CURRENCY || "KES",
+      methodName.toLowerCase().replace(/\s/g, ""),
+      ref
+    ).catch(() => {});
+  }
 }
