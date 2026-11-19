@@ -76,9 +76,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <ThemeProvider>
           <Nav />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">{children}</main>
           <Footer />
           <CommandPalette />
           <GoogleAnalytics />
