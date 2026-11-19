@@ -86,8 +86,8 @@ export default function ForgotPasswordForm() {
 
   if (step === 3) {
     return (
-      <div className="text-center space-y-4">
-        <div className="text-5xl">✅</div>
+      <div className="text-center space-y-4" role="status" aria-live="polite">
+        <div className="text-5xl" aria-hidden="true">✅</div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Password Reset!</h2>
         <p className="text-slate-500 dark:text-slate-400">
           Your password has been changed. You can now log in with your new password.
@@ -104,19 +104,23 @@ export default function ForgotPasswordForm() {
 
   if (step === 2) {
     return (
-      <form onSubmit={resetPassword} className="space-y-4">
+      <form onSubmit={resetPassword} className="space-y-4" aria-label="Reset password form — step 2">
         {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
+          <div role="alert" aria-live="assertive" className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
         )}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Security Question</label>
-          <div className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-300">
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">Security Question</span>
+          <div
+            id="security-question-display"
+            className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-300"
+          >
             {question}
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Your Answer</label>
+          <label htmlFor="reset-answer" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Your Answer</label>
           <input
+            id="reset-answer"
             type="text"
             required
             autoFocus
@@ -126,22 +130,28 @@ export default function ForgotPasswordForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">New Password</label>
+          <label htmlFor="reset-new-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">New Password</label>
           <input
+            id="reset-new-password"
             type="password"
             required
             minLength={6}
+            autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            aria-describedby="reset-password-hint"
             className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
           />
+          <p id="reset-password-hint" className="mt-1 text-xs text-slate-400">At least 6 characters.</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm New Password</label>
+          <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm New Password</label>
           <input
+            id="reset-confirm-password"
             type="password"
             required
             minLength={6}
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
@@ -150,6 +160,7 @@ export default function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={loading}
+          aria-disabled={loading}
           className="w-full rounded-lg bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
         >
           {loading ? "Resetting..." : "Reset Password"}
@@ -166,16 +177,18 @@ export default function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={lookupEmail} className="space-y-4">
+    <form onSubmit={lookupEmail} className="space-y-4" aria-label="Reset password form — step 1">
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
+        <div role="alert" aria-live="assertive" className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
       )}
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email address</label>
+        <label htmlFor="reset-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email address</label>
         <input
+          id="reset-email"
           type="email"
           required
           autoFocus
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
@@ -185,6 +198,7 @@ export default function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={loading}
+        aria-disabled={loading}
         className="w-full rounded-lg bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
       >
         {loading ? "Looking up..." : "Find My Account"}
