@@ -132,6 +132,9 @@ export default function CommandPalette() {
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 backdrop-blur-sm"
       onClick={() => setOpen(false)}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
     >
       <div
         className="mt-[10vh] w-full max-w-xl rounded-2xl bg-white shadow-2xl dark:bg-slate-800"
@@ -139,7 +142,7 @@ export default function CommandPalette() {
       >
         {/* Search input */}
         <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-600">
-          <span className="text-slate-400">🔍</span>
+          <span className="text-slate-400" aria-hidden="true">🔍</span>
           <input
             autoFocus
             type="text"
@@ -149,18 +152,22 @@ export default function CommandPalette() {
             placeholder="Search courses, pages, actions... (Ctrl+K)"
             className="flex-1 bg-transparent text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100"
             aria-label="Command palette search"
+            aria-expanded={filtered.length > 0}
+            aria-controls="command-results"
+            role="combobox"
+            aria-autocomplete="list"
           />
-          <kbd className="rounded border border-slate-300 px-1.5 py-0.5 text-xs text-slate-400 dark:border-slate-600">ESC</kbd>
+          <kbd className="rounded border border-slate-300 px-1.5 py-0.5 text-xs text-slate-400 dark:border-slate-600" aria-hidden="true">ESC</kbd>
         </div>
 
         {/* Results */}
-        <div className="max-h-[50vh] overflow-y-auto p-2">
+        <div id="command-results" className="max-h-[50vh] overflow-y-auto p-2" role="listbox" aria-label="Command results">
           {filtered.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-400">No results found</div>
+            <div className="py-8 text-center text-sm text-slate-400" role="status">No results found</div>
           ) : (
             groups.map((group) => (
-              <div key={group} className="mb-2">
-                <div className="px-3 py-1 text-xs font-semibold uppercase text-slate-400">{group}</div>
+              <div key={group} className="mb-2" role="group" aria-label={group}>
+                <div className="px-3 py-1 text-xs font-semibold uppercase text-slate-400" aria-hidden="true">{group}</div>
                 {filtered.filter((c) => c.group === group).map((cmd) => {
                   runningIndex++;
                   const idx = runningIndex;
@@ -174,8 +181,10 @@ export default function CommandPalette() {
                           ? "bg-indigo-50 dark:bg-indigo-900/40"
                           : "hover:bg-slate-50 dark:hover:bg-slate-700"
                       }`}
+                      role="option"
+                      aria-selected={idx === selectedIndex}
                     >
-                      <span className="text-lg">{cmd.icon}</span>
+                      <span className="text-lg" aria-hidden="true">{cmd.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{cmd.title}</div>
                         <div className="text-xs text-slate-400 truncate">{cmd.subtitle}</div>
@@ -189,7 +198,7 @@ export default function CommandPalette() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-400 dark:border-slate-600">
+        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-400 dark:border-slate-600" aria-hidden="true">
           <span>↑↓ Navigate · Enter Select · ESC Close</span>
           <span className="font-medium">TechPath Academy</span>
         </div>
