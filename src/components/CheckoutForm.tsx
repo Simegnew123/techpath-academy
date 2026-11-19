@@ -185,9 +185,12 @@ export default function CheckoutForm({
             </div>
             <p className="leading-relaxed">{info.note}</p>
             <div className="rounded-lg bg-white px-4 py-2 text-xs text-amber-700 dark:bg-slate-800 dark:text-amber-400">
-              💡 After completing payment, click the button below. Your enrollment will be
-              activated once payment is confirmed by our team (usually within a few minutes
-              during business hours).
+              💡 <strong>Step 1:</strong> Send money to the account above via {method === "telebirr" ? "Telebirr app or *127#" : "CBE Birr / Internet Banking"}.
+              <br />
+              💡 <strong>Step 2:</strong> Copy your transaction confirmation code from the SMS or app.
+              <br />
+              💡 <strong>Step 3:</strong> Click the button below — you&apos;ll be taken to your dashboard to enter the transaction ID.
+              Your course unlocks after we verify your payment.
             </div>
           </div>
         </div>
@@ -218,7 +221,7 @@ export default function CheckoutForm({
         {loading
           ? "Processing…"
           : method === "telebirr" || method === "cbe"
-          ? "I've completed payment →"
+          ? "Continue → Submit Transaction ID"
           : demoMode && method === "demo"
           ? "Complete (Demo)"
           : `Pay securely →`}
