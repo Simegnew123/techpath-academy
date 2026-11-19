@@ -48,7 +48,7 @@ export default function CourseCard({ course }: { course: CourseCardData }) {
             className="h-full w-full object-cover transition group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-4xl">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-4xl" aria-hidden="true">
             {course.categoryIcon || "🎬"}
           </div>
         )}
@@ -69,7 +69,7 @@ export default function CourseCard({ course }: { course: CourseCardData }) {
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-4">
-        <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+        <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600" aria-hidden="true">
           {course.categoryIcon} {course.categoryName}
         </span>
         <h3 className="mt-1 font-bold text-slate-900 group-hover:text-indigo-700">
@@ -82,21 +82,21 @@ export default function CourseCard({ course }: { course: CourseCardData }) {
         {/* Meta: rating + lessons + duration */}
         <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
           {course.rating > 0 && (
-            <span className="flex items-center gap-0.5 font-medium text-amber-500">
-              ⭐ {course.rating.toFixed(1)}
-              <span className="text-slate-400">({course.reviewCount})</span>
+            <span className="flex items-center gap-0.5 font-medium text-amber-500" aria-label={`Rated ${course.rating.toFixed(1)} out of 5 from ${course.reviewCount} reviews`}>
+              <span aria-hidden="true">⭐ {course.rating.toFixed(1)}</span>
+              <span className="text-slate-400" aria-hidden="true">({course.reviewCount})</span>
             </span>
           )}
-          <span>📚 {course.lessonCount} lessons</span>
+          <span aria-hidden="true">📚 {course.lessonCount} lessons</span>
           {course.totalDuration > 0 && (
-            <span>⏱ {formatDuration(course.totalDuration)}</span>
+            <span aria-hidden="true">⏱ {formatDuration(course.totalDuration)}</span>
           )}
         </div>
 
         {/* Instructor */}
         {course.instructorName && (
           <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700" aria-hidden="true">
               {course.instructorName.charAt(0).toUpperCase()}
             </div>
             <span className="text-xs text-slate-600">{course.instructorName}</span>
