@@ -13,6 +13,7 @@ import {
 import { buildCourseCardData } from "@/lib/courseData";
 import GamificationWidget from "@/components/GamificationWidget";
 import DailyReviewWidget from "@/components/DailyReviewWidget";
+import SubmitTxRefForm from "@/components/SubmitTxRefForm";
 
 export const revalidate = 0;
 
@@ -95,34 +96,38 @@ export default async function DashboardPage({
 
       {/* Pending payment banner (Telebirr / CBE) */}
       {sp.pending === "1" && (
-        <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-6">
-          <h3 className="text-lg font-semibold text-amber-900">⏳ Payment Verification in Progress</h3>
-          <p className="mt-2 text-sm text-amber-800">
-            Thank you! Your {sp.method === "telebirr" ? "Telebirr" : sp.method === "cbe" ? "CBE" : "manual"}{" "}
+        <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30">
+          <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-200">⏳ Payment Initiated</h3>
+          <p className="mt-2 text-sm text-amber-800 dark:text-amber-300">
+            Your {sp.method === "telebirr" ? "Telebirr" : sp.method === "cbe" ? "CBE" : "manual"}{" "}
             payment reference is <span className="font-mono font-bold">{sp.ref}</span>.
-            We&apos;re confirming your payment — your course will be unlocked as soon as it&apos;s verified
-            (usually within a few minutes).
+            Please complete the payment using the instructions below, then submit your transaction ID
+            so we can verify and unlock your course.
           </p>
         </div>
       )}
 
-      {/* Pending payments list */}
+      {/* Pending payments — show submit transaction ID form */}
       {pendingPayments.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/50 p-6">
-          <h3 className="font-semibold text-amber-900">Pending Payments ({pendingPayments.length})</h3>
-          <div className="mt-3 space-y-2">
-            {pendingPayments.map((p) => {
-              const c = getCourseById(p.courseId);
-              return (
-                <div key={p.id} className="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm">
-                  <span className="font-medium text-slate-700">{c?.title || "Course"}</span>
-                  <span className="font-mono text-xs text-amber-700">
-                    {p.method} · {p.ref} · {formatPrice(p.amount)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+        <div className="mt-6 space-y-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Pending Payments ({pendingPayments.length})
+          </h3>
+          {pendingPayments.map((p) => {
+            const c = getCourseById(p.courseId);
+            return (
+              <SubmitTxRefForm
+                key={p.id}
+                payment={{
+                  id: p.id,
+                  ref: p.ref,
+                  method: p.method,
+                  amount: p.amount,
+                  courseTitle: c?.title || "Course",
+                }}
+              />
+            );
+          })}
         </div>
       )}
 
