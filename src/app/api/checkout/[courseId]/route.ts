@@ -124,13 +124,16 @@ export async function POST(
       );
     }
 
-    const siteUrl = process.env.SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.SITE_URL || new URL(req.url).origin;
     const txRef = `pp_${uid()}`;
+    const paypalBaseUrl = process.env.PAYPAL_SANDBOX === "true"
+      ? "https://api-m.sandbox.paypal.com"
+      : "https://api-m.paypal.com";
 
     // Create PayPal order
     try {
       // Get access token
-      const tokenRes = await fetch("https://api-m.paypal.com/v1/oauth2/token", {
+      const tokenRes = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
         method: "POST",
         headers: {
           Authorization: `Basic ${Buffer.from(`${paypalClientId}:${paypalSecret}`).toString("base64")}`,
@@ -147,7 +150,7 @@ export async function POST(
       const currency = process.env.CURRENCY || "USD";
 
       // Create order
-      const orderRes = await fetch("https://api-m.paypal.com/v2/checkout/orders", {
+      const orderRes = await fetch(`${paypalBaseUrl}/v2/checkout/orders`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -212,7 +215,7 @@ export async function POST(
     }
 
     const currency = process.env.CURRENCY || "KES";
-    const siteUrl = process.env.SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.SITE_URL || new URL(req.url).origin;
     const txRef = `tx_${uid()}`;
 
     mutate((db) => {
@@ -239,7 +242,7 @@ export async function POST(
           tx_ref: txRef,
           amount: course.price,
           currency,
-          redirect_url: `${siteUrl}/api/payments/verify?tx_ref=${txRef}`,
+          redirect_url: `${siteUrl}/api/payments/verify?tx_ref=${txRef}&provider=flutterwave`,
           customer: { email: user.email, name: user.name },
           customizations: {
             title: "TechPath Academy",
