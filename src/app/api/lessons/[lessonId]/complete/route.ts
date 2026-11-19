@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLesson, hasAccess, markLessonCompleted, getLessonsForCourse, getCompletionPercent } from "@/lib/courses";
 import { readDB, writeDB, getCourseById, createNotification, generateCertCode, generateCertHash, notifyAdmins, uid, nowISO, getFinalExamForCourse } from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
+import { sendCourseCompletionEmail } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -124,6 +125,9 @@ export async function POST(
         `${user.name} completed "${course.title}" and earned a certificate (Code: ${cert.code}).`,
         `/certificates/${cert.code}`
       );
+
+      // Send course completion email (non-blocking)
+      sendCourseCompletionEmail(user.name, user.email, course.title, course.slug, cert.code).catch(() => {});
     } else if (!existingCert && finalExam) {
       // 100% lessons done but final exam required → notify student
       createNotification({
