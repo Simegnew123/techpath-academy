@@ -10,6 +10,7 @@ import {
 } from "@/lib/store";
 import { getCourseById } from "@/lib/courses";
 import { issueCertificate } from "@/lib/courses";
+import { sendCourseCompletionEmail } from "@/lib/email";
 
 // POST /api/quizzes/[id]/submit — auto-grade quiz submission
 export async function POST(
@@ -109,6 +110,9 @@ export async function POST(
             entityId: cert.id,
             details: `Certificate issued via final exam pass (${score}%) for "${course.title}"`,
           });
+
+          // Send course completion email (non-blocking)
+          sendCourseCompletionEmail(user.name, user.email, course.title, course.slug, cert.code).catch(() => {});
         }
       } catch (e) {
         // Certificate may already exist — that's fine
