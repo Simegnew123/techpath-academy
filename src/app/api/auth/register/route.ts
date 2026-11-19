@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readDB, mutate, uid, nowISO, createNotification } from "@/lib/store";
 import { hashPassword, createSession } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS, getClientIP } from "@/lib/rateLimit";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   // Rate limit: 5 registrations per hour per IP
@@ -67,6 +68,9 @@ export async function POST(req: NextRequest) {
       : "Explore our courses, check out the book library, and start learning today!",
     link: isFirstUser ? "/admin" : "/courses",
   });
+
+  // Send welcome email (non-blocking — don't fail registration if email fails)
+  sendWelcomeEmail(name, email, user.role).catch(() => {});
 
   await createSession(user.id);
   return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
