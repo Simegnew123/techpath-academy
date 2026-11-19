@@ -45,52 +45,62 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-4" aria-label="Registration form">
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
+        <div role="alert" aria-live="assertive" className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>
       )}
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full name</label>
+        <label htmlFor="reg-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full name</label>
         <input
+          id="reg-name"
           type="text"
           required
+          autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+        <label htmlFor="reg-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
         <input
+          id="reg-email"
           type="email"
           required
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+        <label htmlFor="reg-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
         <input
+          id="reg-password"
           type="password"
           required
           minLength={6}
+          autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          aria-describedby="password-hint"
           className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
-        <p className="mt-1 text-xs text-slate-400">At least 6 characters.</p>
+        <p id="password-hint" className="mt-1 text-xs text-slate-400">At least 6 characters.</p>
       </div>
 
       {/* Security Question */}
-      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">🔒 Security Question</p>
+      <fieldset className="border-t border-slate-200 dark:border-slate-700 pt-4">
+        <legend className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <span aria-hidden="true">🔒 </span>Security Question
+        </legend>
         <p className="mt-1 text-xs text-slate-400">
           Used to recover your password if you forget it. You can skip this, but then only the admin can reset your password.
         </p>
         <div className="mt-3">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Question</label>
+          <label htmlFor="reg-security-q" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Question</label>
           <select
+            id="reg-security-q"
             value={securityQuestion}
             onChange={(e) => setSecurityQuestion(e.target.value)}
             className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
@@ -101,8 +111,9 @@ export default function RegisterForm() {
           </select>
         </div>
         <div className="mt-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Answer</label>
+          <label htmlFor="reg-security-a" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Answer</label>
           <input
+            id="reg-security-a"
             type="text"
             value={securityAnswer}
             onChange={(e) => setSecurityAnswer(e.target.value)}
@@ -110,11 +121,12 @@ export default function RegisterForm() {
             className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 focus:border-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
-      </div>
+      </fieldset>
 
       <button
         type="submit"
         disabled={loading}
+        aria-disabled={loading}
         className="w-full rounded-lg bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
       >
         {loading ? "Creating account..." : "Create account"}
