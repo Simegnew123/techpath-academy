@@ -9,11 +9,52 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+
+      # ── Payment Configuration ──
+      # Set to "live" to accept real payments. Default is "demo" (simulated).
       - key: PAYMENT_MODE
-        value: demo
+        sync: false
+      # Your site URL (needed for payment redirect URLs)
+      # e.g. https://techpath-academy.onrender.com
+      - key: SITE_URL
+        sync: false
+      # Currency code: KES, USD, ETB, etc.
+      - key: CURRENCY
+        sync: false
+
+      # ── PayPal (international payments) ──
+      # Get credentials: https://developer.paypal.com → My Apps & Credentials
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      # Set to "true" to use PayPal sandbox (for testing with fake accounts)
+      - key: PAYPAL_SANDBOX
+        sync: false
+
+      # ── Flutterwave (Card + M-Pesa) ──
+      # Get API keys: https://dashboard.flutterwave.com/dashboard/settings/apis
+      - key: FLW_SECRET_KEY
+        sync: false
+      - key: FLW_PUBLIC_KEY
+        sync: false
+
+      # ── Manual Payment Accounts (Telebirr / CBE) ──
+      # These are shown to students at checkout — set your real account numbers
+      - key: TELEBIRR_ACCOUNT
+        sync: false
+      - key: TELEBIRR_ACCOUNT_NAME
+        sync: false
+      - key: CBE_ACCOUNT
+        sync: false
+      - key: CBE_ACCOUNT_NAME
+        sync: false
+
+      # ── Security ──
       - key: NEXTAUTH_SECRET
         generateValue: true
-      # Sentry error monitoring (free tier) — get DSN from sentry.io
+
+      # ── Sentry error monitoring (free tier) ──
       # Client-side DSN is exposed to browser (safe — it's a public key)
       - key: NEXT_PUBLIC_SENTRY_DSN
         sync: false
@@ -22,6 +63,11 @@ services:
         sync: false
       # Optional: for source map upload at build time (leave empty to skip)
       - key: SENTRY_AUTH_TOKEN
+        sync: false
+
+      # ── Google Analytics (optional) ──
+      # Set to your GA4 Measurement ID (G-XXXXXXXXXX) to enable tracking
+      - key: NEXT_PUBLIC_GA_ID
         sync: false
     disk:
       name: lms-data
