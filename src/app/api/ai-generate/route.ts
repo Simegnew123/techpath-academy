@@ -151,21 +151,85 @@ const GROQ_MODELS = [
   "llama-3.1-8b-instant",
   "llama3-70b-8192",
   "llama3-8b-8192",
+  "gemma2-9b-it",
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "qwen-2.5-32b",
+  "qwen/qwen3-32b",
+  "deepseek-r1-distill-llama-70b",
+  "mistral-saba-24b",
 ];
+
+// Fetch the list of models actually available on this Groq account
+function fetchGroqModels(apiKey: string): Promise<string[]> {
+  return new Promise((resolve) => {
+    const req = https.request(
+      {
+        hostname: "api.groq.com",
+        path: "/openai/v1/models",
+        method: "GET",
+        headers: { "Authorization": `Bearer ${apiKey}` },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (c) => (data += c));
+        res.on("end", () => {
+          try {
+            const json = JSON.parse(data);
+            if (json.data && Array.isArray(json.data)) {
+              const ids = json.data.map((m: { id: string }) => m.id);
+              resolve(ids);
+            } else {
+              resolve([]);
+            }
+          } catch {
+            resolve([]);
+          }
+        });
+      }
+    );
+    req.on("error", () => resolve([]));
+    req.end();
+  });
+}
 
 function callGroq(prompt: string, apiKey: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
-    let lastError = "";
+    let modelsToTry = GROQ_MODELS;
 
-    for (const model of GROQ_MODELS) {
+    // Dynamically fetch available models and prioritize those
+    const available = await fetchGroqModels(apiKey);
+    if (available.length > 0) {
+      // Use available models that are known chat models, in priority order
+      const chatModels = available.filter((m: string) =>
+        !m.includes("whisper") &&
+        !m.includes("tts") &&
+        !m.includes("guard") &&
+        !m.includes("stable")
+      );
+      if (chatModels.length > 0) {
+        // Sort: prefer models in our priority list first, then others
+        modelsToTry = [
+          ...GROQ_MODELS.filter(m => chatModels.includes(m)),
+          ...chatModels.filter(m => !GROQ_MODELS.includes(m)),
+        ];
+      }
+    }
+
+    let lastError = "";
+    for (const model of modelsToTry) {
       try {
         const result = await callGroqWithModel(prompt, apiKey, model);
         resolve(result);
         return;
       } catch (err) {
         lastError = (err as Error).message;
-        // If it's not a model-not-found error, stop trying
-        if (!lastError.includes("does not exist") && !lastError.includes("model")) {
+        // Continue to next model if this one is unavailable/decommissioned
+        if (
+          !lastError.includes("does not exist") &&
+          !lastError.includes("decommissioned") &&
+          !lastError.includes("model")
+        ) {
           break;
         }
       }
