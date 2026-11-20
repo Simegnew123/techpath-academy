@@ -152,17 +152,62 @@ Instructions:
 
   // ---- Step 2: Try AI providers (Groq → Gemini → OpenAI) ----
 
+  // Trim API keys to prevent header errors from copy-paste whitespace
+  const groqKey = (process.env.GROQ_API_KEY || "").trim();
+  const geminiKey = (process.env.GEMINI_API_KEY || "").trim();
+  const openaiKey = (process.env.OPENAI_API_KEY || "").trim();
+
   // --- Provider 1: Groq (FREE) ---
-  if (process.env.GROQ_API_KEY) {
+  if (groqKey) {
     try {
+      // Dynamically fetch available models from Groq
+      const modelsRes = await fetch("https://api.groq.com/openai/v1/models", {
+        headers: { "Authorization": `Bearer ${groqKey}` },
+      });
+      let modelToUse = process.env.GROQ_MODEL || "";
+
+      if (modelsRes.ok) {
+        const modelsData = await modelsRes.json();
+        const availableModels: string[] = (modelsData.data || [])
+          .map((m: { id: string }) => m.id)
+          .filter((id: string) =>
+            !id.includes("whisper") &&
+            !id.includes("tts") &&
+            !id.includes("guard") &&
+            !id.includes("stable")
+          );
+
+        // Priority list of preferred models
+        const preferred = [
+          "llama-3.3-70b-versatile",
+          "llama-3.1-70b-versatile",
+          "llama-3.1-8b-instant",
+          "openai/gpt-oss-120b",
+          "openai/gpt-oss-20b",
+          "qwen-2.5-32b",
+          "qwen/qwen3-32b",
+          "gemma2-9b-it",
+          "deepseek-r1-distill-llama-70b",
+          "mistral-saba-24b",
+        ];
+
+        // Use the first preferred model that's available, else first available
+        modelToUse = preferred.find(m => availableModels.includes(m)) || availableModels[0] || "";
+      }
+
+      // Fallback if we couldn't determine a model
+      if (!modelToUse) {
+        modelToUse = "llama-3.3-70b-versatile";
+      }
+
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+          "Authorization": `Bearer ${groqKey}`,
         },
         body: JSON.stringify({
-          model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+          model: modelToUse,
           messages: [
             { role: "system", content: systemPrompt },
             ...chatHistory,
@@ -172,20 +217,24 @@ Instructions:
           temperature: 0.7,
         }),
       });
-      if (!response.ok) throw new Error(`Groq error: ${response.status}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(`Groq error ${response.status}: ${errData?.error?.message || response.statusText}`);
+      }
       const data = await response.json();
       const answer = data.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again.";
       return NextResponse.json({
         answer, mode: "ai", provider: "groq",
         sources: relevantContent.map(r => `${r.type}: ${r.title}`),
       });
-    } catch (err: any) {
-      console.error("Groq error:", err.message);
+    } catch (err: unknown) {
+      console.error("Groq error:", (err as Error).message);
+      // Fall through to next provider
     }
   }
 
   // --- Provider 2: Google Gemini (FREE tier) ---
-  if (process.env.GEMINI_API_KEY) {
+  if (geminiKey) {
     try {
       const geminiContents = [
         ...chatHistory.map((h: { role: string; content: string }) => ({
@@ -194,38 +243,59 @@ Instructions:
         })),
         { role: "user", parts: [{ text: `${systemPrompt}\n\nStudent question: ${question}` }] },
       ];
-      const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: geminiContents,
-            generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
-          }),
+
+      // Try preferred Gemini models in order
+      const geminiModels = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+      let geminiAnswer = "";
+
+      for (const gModel of geminiModels) {
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${geminiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: geminiContents,
+                generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
+              }),
+            }
+          );
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            if (errData?.error?.message?.includes("not found") || errData?.error?.message?.includes("does not exist")) {
+              continue; // try next model
+            }
+            throw new Error(`Gemini error ${response.status}: ${errData?.error?.message || response.statusText}`);
+          }
+          const data = await response.json();
+          geminiAnswer = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          if (geminiAnswer) break;
+        } catch (e) {
+          // try next model
         }
-      );
-      if (!response.ok) throw new Error(`Gemini error: ${response.status}`);
-      const data = await response.json();
-      const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response. Please try again.";
-      return NextResponse.json({
-        answer, mode: "ai", provider: "gemini",
-        sources: relevantContent.map(r => `${r.type}: ${r.title}`),
-      });
-    } catch (err: any) {
-      console.error("Gemini error:", err.message);
+      }
+
+      if (geminiAnswer) {
+        return NextResponse.json({
+          answer: geminiAnswer, mode: "ai", provider: "gemini",
+          sources: relevantContent.map(r => `${r.type}: ${r.title}`),
+        });
+      }
+      throw new Error("All Gemini models failed");
+    } catch (err: unknown) {
+      console.error("Gemini error:", (err as Error).message);
     }
   }
 
   // --- Provider 3: OpenAI (paid) ---
-  if (process.env.OPENAI_API_KEY) {
+  if (openaiKey) {
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Authorization": `Bearer ${openaiKey}`,
         },
         body: JSON.stringify({
           model: process.env.OPENAI_MODEL || "gpt-4o-mini",
@@ -245,8 +315,8 @@ Instructions:
         answer, mode: "ai", provider: "openai",
         sources: relevantContent.map(r => `${r.type}: ${r.title}`),
       });
-    } catch (err: any) {
-      console.error("OpenAI error:", err.message);
+    } catch (err: unknown) {
+      console.error("OpenAI error:", (err as Error).message);
     }
   }
 
