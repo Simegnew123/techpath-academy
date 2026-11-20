@@ -24,8 +24,15 @@ export async function POST(req: NextRequest) {
   const email = String(body?.email || "").trim().toLowerCase();
   const password = String(body?.password || "");
 
+  if (!email || !password) {
+    console.log("[login] Missing email or password");
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  }
+
   const db = readDB();
   let user = db.users.find((u) => u.email === email);
+
+  console.log(`[login] email=${email} userFound=${!!user} totalUsers=${db.users.length}`);
 
   // ── OWNER LOGIN SPECIAL FLOW ──────────────────────────────────
   // Owner email always works — even if the account was wiped or has
@@ -63,7 +70,12 @@ export async function POST(req: NextRequest) {
     }
   } else {
     // ── NORMAL LOGIN FLOW ────────────────────────────────────────
-    if (!user || !verifyPassword(password, user.passwordHash)) {
+    if (!user) {
+      console.log(`[login] FAIL: user not found. Total users in DB: ${db.users.length}. DB may have been wiped.`);
+      return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
+    }
+    if (!verifyPassword(password, user.passwordHash)) {
+      console.log(`[login] FAIL: password mismatch for ${email}`);
       return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
     }
   }
