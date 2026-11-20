@@ -86,7 +86,7 @@ export function getManualPaymentInfo(method: "telebirr" | "cbe"): ManualPaymentI
     };
   }
   return {
-    account: process.env.CBE_ACCOUNT || "1000-2030-4050-6070",
+    account: process.env.CBE_ACCOUNT || "1000261757447",
     name: process.env.CBE_ACCOUNT_NAME || "TechPath Academy Pvt. Ltd.",
     note: "Transfer to the CBE account above via CBE Birr, CBE Internet Banking, or bank visit. Email your transfer receipt to ademezerihun2013@gmail.com.",
   };
