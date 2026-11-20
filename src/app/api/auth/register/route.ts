@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
     d.users.push(user);
   });
 
+  // Verify the user was actually saved
+  const savedDb = readDB();
+  const savedUser = savedDb.users.find((u) => u.email === email);
+  console.log(`[register] email=${email} saved=${!!savedUser} totalUsers=${savedDb.users.length} hashPrefix=${savedUser?.passwordHash?.slice(0, 7)}`);
+
   // Welcome notification
   createNotification({
     userId: user.id,
