@@ -144,10 +144,41 @@ ${inputText.substring(0, 8000)}`;
 
 // --- AI Provider helpers ---
 
+// Groq models in priority order — falls back if a model is unavailable
+const GROQ_MODELS = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-70b-versatile",
+  "llama-3.1-8b-instant",
+  "llama3-70b-8192",
+  "llama3-8b-8192",
+];
+
 function callGroq(prompt: string, apiKey: string): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    let lastError = "";
+
+    for (const model of GROQ_MODELS) {
+      try {
+        const result = await callGroqWithModel(prompt, apiKey, model);
+        resolve(result);
+        return;
+      } catch (err) {
+        lastError = (err as Error).message;
+        // If it's not a model-not-found error, stop trying
+        if (!lastError.includes("does not exist") && !lastError.includes("model")) {
+          break;
+        }
+      }
+    }
+
+    reject(new Error(lastError || "All Groq models failed"));
+  });
+}
+
+function callGroqWithModel(prompt: string, apiKey: string, model: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model,
       messages: [
         { role: "system", content: "You are an expert instructional designer. Always return valid JSON only, no markdown." },
         { role: "user", content: prompt },
