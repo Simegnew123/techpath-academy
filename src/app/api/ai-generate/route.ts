@@ -89,13 +89,17 @@ ${inputText.substring(0, 8000)}`;
   let output = "";
   let provider = "none";
 
+  // Trim API keys to remove accidental whitespace/newlines from copy-paste
+  const groqKey = (process.env.GROQ_API_KEY || "").trim();
+  const geminiKey = (process.env.GEMINI_API_KEY || "").trim();
+
   try {
-    if (process.env.GROQ_API_KEY) {
+    if (groqKey) {
       provider = "groq";
-      output = await callGroq(prompt);
-    } else if (process.env.GEMINI_API_KEY) {
+      output = await callGroq(prompt, groqKey);
+    } else if (geminiKey) {
       provider = "gemini";
-      output = await callGemini(prompt);
+      output = await callGemini(prompt, geminiKey);
     } else {
       // No API key — return a helpful message
       updateAIGenerationJob(job.id, {
@@ -140,7 +144,7 @@ ${inputText.substring(0, 8000)}`;
 
 // --- AI Provider helpers ---
 
-function callGroq(prompt: string): Promise<string> {
+function callGroq(prompt: string, apiKey: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
       model: "llama-3.3-70b-versatile",
@@ -158,7 +162,7 @@ function callGroq(prompt: string): Promise<string> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Length": Buffer.byteLength(body),
       },
     };
@@ -169,9 +173,13 @@ function callGroq(prompt: string): Promise<string> {
       res.on("end", () => {
         try {
           const json = JSON.parse(data);
+          if (json.error) {
+            reject(new Error(`Groq API error: ${json.error.message || json.error}`));
+            return;
+          }
           resolve(json.choices?.[0]?.message?.content || "");
         } catch {
-          reject(new Error("Failed to parse Groq response"));
+          reject(new Error(`Groq API returned unexpected response (status ${res.statusCode}): ${data.substring(0, 200)}`));
         }
       });
     });
@@ -181,7 +189,7 @@ function callGroq(prompt: string): Promise<string> {
   });
 }
 
-function callGemini(prompt: string): Promise<string> {
+function callGemini(prompt: string, apiKey: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
@@ -190,7 +198,7 @@ function callGemini(prompt: string): Promise<string> {
 
     const options = {
       hostname: "generativelanguage.googleapis.com",
-      path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -204,9 +212,13 @@ function callGemini(prompt: string): Promise<string> {
       res.on("end", () => {
         try {
           const json = JSON.parse(data);
+          if (json.error) {
+            reject(new Error(`Gemini API error: ${json.error.message || json.error}`));
+            return;
+          }
           resolve(json.candidates?.[0]?.content?.parts?.[0]?.text || "");
         } catch {
-          reject(new Error("Failed to parse Gemini response"));
+          reject(new Error(`Gemini API returned unexpected response (status ${res.statusCode}): ${data.substring(0, 200)}`));
         }
       });
     });
