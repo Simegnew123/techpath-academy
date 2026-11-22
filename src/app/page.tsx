@@ -3,6 +3,7 @@ import CourseCard from "@/components/CourseCard";
 import TerminalDemo from "@/components/TerminalDemo";
 import CareerPathSelector from "@/components/CareerPathSelector";
 import HeroCTA from "@/components/HeroCTA";
+import PreFooterCTA from "@/components/PreFooterCTA";
 import { getCourses } from "@/lib/courses";
 import { CATEGORIES } from "@/lib/categories";
 import { buildCourseCardData } from "@/lib/courseData";
@@ -397,32 +398,9 @@ export default function HomePage() {
       </section>
 
       {/* ===============================================
-          CTA — clean, no gradient
+          CTA — session-aware (different for logged-in users)
           =============================================== */}
-      <section className="border-t border-slate-200 py-16 dark:border-slate-800">
-        <div className="mx-auto max-w-3xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            Ready to start building real IT skills?
-          </h2>
-          <p className="mt-3 text-slate-500 dark:text-slate-400">
-            Create a free account and get instant access to tutorials, flashcards, and the virtual lab.
-          </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <Link
-              href="/register"
-              className="rounded-xl bg-indigo-600 px-7 py-3.5 font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700"
-            >
-              Create Free Account
-            </Link>
-            <Link
-              href="/courses"
-              className="rounded-xl border border-slate-300 px-7 py-3.5 font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-200"
-            >
-              Browse Courses
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PreFooterCTA />
 
       {/* ===============================================
           SEO: JSON-LD structured data — EducationalOrganization
