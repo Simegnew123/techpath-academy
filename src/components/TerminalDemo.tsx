@@ -152,7 +152,7 @@ export default function TerminalDemo() {
       </div>
 
       {/* Terminal body */}
-      <div className="h-72 overflow-y-auto p-4 font-mono text-[13px] leading-relaxed">
+      <div className="h-56 overflow-y-auto p-4 font-mono text-[13px] leading-relaxed">
         {lines.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap">
             {line.type === "system" && (
@@ -196,10 +196,10 @@ export default function TerminalDemo() {
     </div>
 
       {/* Quick command chips — tap instead of type on mobile */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {[
           "ping 8.8.8.8",
-          "nmap scanme.example.com",
+          "nmap scanme",
           "ifconfig",
           "whoami",
           "ls",
@@ -207,8 +207,8 @@ export default function TerminalDemo() {
         ].map((cmd) => (
           <button
             key={cmd}
-            onClick={() => runCommand(cmd)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs text-slate-700 transition hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:bg-indigo-950 dark:hover:text-indigo-300"
+            onClick={() => runCommand(cmd === "nmap scanme" ? "nmap scanme.example.com" : cmd)}
+            className="rounded-md border border-slate-300 bg-white px-2.5 py-1 font-mono text-xs text-slate-700 transition hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:bg-indigo-950 dark:hover:text-indigo-300"
           >
             {cmd}
           </button>
