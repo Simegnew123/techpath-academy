@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { createCourse, createModule, addLesson, createCTFChallenge, createLabConfig } from "@/lib/courses";
+import { createCourse, createModule, addLesson, createCTFChallenge, createLabConfig, getCourses } from "@/lib/courses";
 import { getCategoryByName } from "@/lib/categories";
 import { notifyAllStudents } from "@/lib/store";
+import type { Course } from "@/lib/store";
+
+// GET /api/courses — returns all courses (for admin grading/analytics pages)
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+
+  let courses: Course[] = getCourses();
+
+  // Instructors only see their own courses; admins/teaching_assiants see all
+  if (user.role === "instructor") {
+    courses = courses.filter((c) => c.instructorId === user.id);
+  }
+
+  return NextResponse.json({ courses });
+}
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
