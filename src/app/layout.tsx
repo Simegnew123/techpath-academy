@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Script from "next/script";
 import Nav from "@/components/Nav";
@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import CommandPalette from "@/components/CommandPalette";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import PWAInstall from "@/components/PWAInstall";
 
 const BASE_URL = "https://techpath-academy.onrender.com";
 
@@ -60,6 +61,19 @@ export const metadata: Metadata = {
     // Add Google Search Console verification code here when ready
     // google: "your-verification-code",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TechPath Academy",
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4f46e5",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -74,6 +88,9 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png" />
+        <link rel="icon" href="/icons/favicon-16.png" sizes="16x16" type="image/png" />
       </head>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100">
         <a href="#main-content" className="skip-link">
@@ -85,6 +102,7 @@ export default function RootLayout({
           <Footer />
           <CommandPalette />
           <GoogleAnalytics />
+          <PWAInstall />
         </ThemeProvider>
       </body>
     </html>
