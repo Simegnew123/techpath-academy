@@ -33,14 +33,17 @@ export default function AdminGradingPage() {
   const [gradingId, setGradingId] = useState<string | null>(null);
   const [gradeValue, setGradeValue] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   useEffect(() => {
     async function fetchCourses() {
       const res = await fetch("/api/courses");
       if (res.ok) {
         const data = await res.json();
-        setCourses((data.courses || data).map((c: any) => ({ id: c.id, title: c.title })));
+        const list = data.courses || data;
+        setCourses(list.map((c: any) => ({ id: c.id, title: c.title })));
       }
+      setLoadingCourses(false);
     }
     fetchCourses();
   }, []);
@@ -107,15 +110,21 @@ export default function AdminGradingPage() {
       </div>
 
       <div className="mb-6">
-        <select
-          value={selectedCourse}
-          onChange={(e) => setSelectedCourse(e.target.value)}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
-          aria-label="Select course"
-        >
-          <option value="">Select a course...</option>
-          {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-        </select>
+        {loadingCourses ? (
+          <p className="text-sm text-slate-400">Loading courses...</p>
+        ) : courses.length === 0 ? (
+          <p className="text-sm text-slate-400">No courses found. Create a course first.</p>
+        ) : (
+          <select
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
+            aria-label="Select course"
+          >
+            <option value="">Select a course...</option>
+            {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+        )}
       </div>
 
       {!selectedCourse ? (
