@@ -86,6 +86,7 @@ export default function Nav() {
           <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">Home</Link>
           <Link href="/courses" className="hover:text-indigo-600 dark:hover:text-indigo-400">Courses</Link>
           <Link href="/services" className="hover:text-indigo-600 dark:hover:text-indigo-400">Services</Link>
+          <Link href="/install" className="hover:text-indigo-600 dark:hover:text-indigo-400">📲 Get App</Link>
 
           {/* Resources dropdown */}
           <div ref={resourcesRef} className="relative">
@@ -206,6 +207,7 @@ export default function Nav() {
             <Link href="/" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">Home</Link>
             <Link href="/courses" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">Courses</Link>
             <Link href="/services" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">Services</Link>
+            <Link href="/install" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">📲 Get the App</Link>
             <Link href="/books" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">📚 Library</Link>
             <Link href="/flashcards" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">🃏 Flashcards</Link>
             <Link href="/jobs" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">💼 Jobs</Link>
