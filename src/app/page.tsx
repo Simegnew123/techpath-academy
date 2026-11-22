@@ -54,7 +54,7 @@ export default function HomePage() {
               Lab-based IT training — built for the real world
             </span>
 
-            <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            <h1 className="mt-6 text-4xl font-bold leading-[1.15] tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
               Master real-world network engineering,
               <span className="text-indigo-600 dark:text-indigo-400"> Linux security</span>, and
               <span className="text-indigo-600 dark:text-indigo-400"> cloud infrastructure</span> through guided, lab-based training.
