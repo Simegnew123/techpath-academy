@@ -50,6 +50,7 @@ export default function Footer() {
               <li><Link href="/privacy" className="hover:text-indigo-600 dark:hover:text-indigo-400">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-indigo-600 dark:hover:text-indigo-400">Terms of Service</Link></li>
               <li><Link href="/contact" className="hover:text-indigo-600 dark:hover:text-indigo-400">Contact</Link></li>
+              <li><Link href="/install" className="hover:text-indigo-600 dark:hover:text-indigo-400">📲 Install App</Link></li>
               <li><a href="mailto:ademezerihun2013@gmail.com" className="hover:text-indigo-600 dark:hover:text-indigo-400">Email Support</a></li>
             </ul>
           </div>
