@@ -22,6 +22,7 @@ export default function AdminAnalyticsPage() {
   const [selected, setSelected] = useState("");
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   useEffect(() => {
     async function fetchCourses() {
@@ -32,6 +33,7 @@ export default function AdminAnalyticsPage() {
         setCourses(published);
         if (published.length > 0) setSelected(published[0].id);
       }
+      setLoadingCourses(false);
     }
     fetchCourses();
   }, []);
@@ -57,14 +59,20 @@ export default function AdminAnalyticsPage() {
 
       {/* Course selector */}
       <div className="mb-6">
-        <select
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
-          aria-label="Select course for analytics"
-        >
-          {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-        </select>
+        {loadingCourses ? (
+          <p className="text-sm text-slate-400">Loading courses...</p>
+        ) : courses.length === 0 ? (
+          <p className="text-sm text-slate-400">No published courses found. Publish a course first to see analytics.</p>
+        ) : (
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
+            aria-label="Select course for analytics"
+          >
+            {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+        )}
       </div>
 
       {loading ? (
