@@ -2,6 +2,7 @@ import Link from "next/link";
 import CourseCard from "@/components/CourseCard";
 import TerminalDemo from "@/components/TerminalDemo";
 import CareerPathSelector from "@/components/CareerPathSelector";
+import HeroCTA from "@/components/HeroCTA";
 import { getCourses } from "@/lib/courses";
 import { CATEGORIES } from "@/lib/categories";
 import { buildCourseCardData } from "@/lib/courseData";
@@ -46,7 +47,7 @@ export default function HomePage() {
         {/* Subtle background accent — no full-bleed gradient */}
         <div className="absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/4 translate-x-1/4 rounded-full bg-indigo-50 dark:bg-indigo-950/30 blur-3xl" />
 
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 lg:grid-cols-2 lg:py-24">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-10 lg:grid-cols-2 lg:py-14">
           {/* Left column */}
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
@@ -65,23 +66,10 @@ export default function HomePage() {
               real command-line exercises, and verifiable certifications.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/courses"
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700"
-              >
-                Browse Courses
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-200 dark:hover:border-indigo-500"
-              >
-                Try a Free Lesson
-              </Link>
-            </div>
+            <HeroCTA />
 
             {/* Specs — concrete, verifiable */}
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {specs.map((s) => (
                 <div key={s.label}>
                   <div className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{s.value}</div>
