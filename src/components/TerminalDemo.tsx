@@ -138,10 +138,11 @@ export default function TerminalDemo() {
   };
 
   return (
-    <div
-      onClick={() => inputRef.current?.focus()}
-      className="overflow-hidden rounded-xl border border-slate-700 bg-[#0f172a] shadow-2xl"
-    >
+    <div className="space-y-3">
+      <div
+        onClick={() => inputRef.current?.focus()}
+        className="overflow-hidden rounded-xl border border-slate-700 bg-[#0f172a] shadow-[0_20px_60px_-15px_rgba(37,99,235,0.4)] ring-1 ring-indigo-500/20"
+      >
       {/* Title bar */}
       <div className="flex items-center gap-2 border-b border-slate-700 bg-slate-800 px-4 py-2.5">
         <span className="h-3 w-3 rounded-full bg-red-500" />
@@ -191,6 +192,27 @@ export default function TerminalDemo() {
           />
         </form>
         <div ref={endRef} />
+      </div>
+    </div>
+
+      {/* Quick command chips — tap instead of type on mobile */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          "ping 8.8.8.8",
+          "nmap scanme.example.com",
+          "ifconfig",
+          "whoami",
+          "ls",
+          "cat README.txt",
+        ].map((cmd) => (
+          <button
+            key={cmd}
+            onClick={() => runCommand(cmd)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs text-slate-700 transition hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:bg-indigo-950 dark:hover:text-indigo-300"
+          >
+            {cmd}
+          </button>
+        ))}
       </div>
     </div>
   );
