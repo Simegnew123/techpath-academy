@@ -15,8 +15,15 @@ export default function Nav() {
   const [user, setUser] = useState<Me["user"]>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const resourcesRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Detect PWA standalone mode — hide "Get App" when already installed
+  useEffect(() => {
+    const mql = window.matchMedia("(display-mode: standalone)");
+    setIsStandalone(mql.matches || (window.navigator as any).standalone === true);
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -86,7 +93,14 @@ export default function Nav() {
           <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">Home</Link>
           <Link href="/courses" className="hover:text-indigo-600 dark:hover:text-indigo-400">Courses</Link>
           <Link href="/services" className="hover:text-indigo-600 dark:hover:text-indigo-400">Services</Link>
-          <Link href="/install" className="hover:text-indigo-600 dark:hover:text-indigo-400">📲 Get App</Link>
+          {!isStandalone && (
+            <Link
+              href="/install"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              <span aria-hidden="true">📲</span> Get App
+            </Link>
+          )}
 
           {/* Resources dropdown */}
           <div ref={resourcesRef} className="relative">
@@ -207,7 +221,9 @@ export default function Nav() {
             <Link href="/" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">Home</Link>
             <Link href="/courses" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">Courses</Link>
             <Link href="/services" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">Services</Link>
-            <Link href="/install" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">📲 Get the App</Link>
+            {!isStandalone && (
+              <Link href="/install" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 whitespace-nowrap py-2 hover:text-indigo-600 dark:hover:text-indigo-400">📲 Get the App</Link>
+            )}
             <Link href="/books" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">📚 Library</Link>
             <Link href="/flashcards" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">🃏 Flashcards</Link>
             <Link href="/jobs" onClick={() => setMenuOpen(false)} className="py-2 hover:text-indigo-600 dark:hover:text-indigo-400">💼 Jobs</Link>
