@@ -38,7 +38,7 @@ export function buildCourseCardData(course: Course): CourseCardData {
 
   return {
     id: course.id,
-    slug: course.slug,
+    slug: course.slug || "",
     title: course.title,
     description: course.description,
     coverImage: course.coverImage,
