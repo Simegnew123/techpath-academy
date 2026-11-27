@@ -11,6 +11,7 @@ import {
   getPlatformStats,
 } from "@/lib/store";
 import RecertCheckButton from "@/components/RecertCheckButton";
+import SeedDemoButton from "@/components/SeedDemoButton";
 
 export const revalidate = 0;
 
@@ -77,7 +78,7 @@ export default async function AdminPage() {
           </Link>
           <Link
             href="/admin/exam"
-            className="rounded-xl border border-amber-300 bg-amber-50 px-5 py-2.5 font-semibold text-amber-700 transition hover:bg-amber-100"
+            className="rounded-xl border border-amber-300 bg-amber-50 px-5 py-2.5 font-semibold text-[#fcd34d] hover:text-amber-700 transition hover:bg-amber-100"
           >
             📋 Final Exam Builder
           </Link>
@@ -122,25 +123,25 @@ export default async function AdminPage() {
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
           href="/admin/at-risk"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-[#fca5a5] hover:text-red-700 transition hover:bg-red-100"
         >
           ⚠️ At-Risk Students
         </Link>
         <Link
           href="/admin/analytics-heatmap"
-          className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-100"
+          className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-[#fdba74] hover:text-orange-700 transition hover:bg-orange-100"
         >
           🔥 Question Heatmap
         </Link>
         <Link
           href="/admin/skill-matrix"
-          className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+          className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-[#c4b5fd] hover:text-indigo-700 transition hover:bg-indigo-100"
         >
           🎯 Skill Matrix
         </Link>
         <Link
           href="/admin/ai-authoring"
-          className="rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
+          className="rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-semibold text-[#e9d5ff] hover:text-purple-700 transition hover:bg-purple-100"
         >
           🤖 AI Authoring
         </Link>
@@ -158,6 +159,18 @@ export default async function AdminPage() {
       {user.role === "admin" && (
         <div className="mt-6">
           <RecertCheckButton />
+        </div>
+      )}
+
+      {/* Seed Demo Data button (shows when empty state) */}
+      {user.role === "admin" && stats.totalStudents === 0 && stats.totalQuizzes === 0 && stats.totalCertificates === 0 && (
+        <div className="mt-6 rounded-2xl border border-dashed border-indigo-300 bg-indigo-50 p-6 text-center dark:border-indigo-700 dark:bg-indigo-950">
+          <div className="text-3xl">🧪</div>
+          <h3 className="mt-3 text-lg font-bold text-indigo-900 dark:text-indigo-200">Ready to Showcase?</h3>
+          <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
+            Seed demo students, enrollments, quiz attempts, and certificates to populate your analytics.
+          </p>
+          <SeedDemoButton />
         </div>
       )}
 
