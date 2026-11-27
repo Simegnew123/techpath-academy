@@ -33,6 +33,9 @@ export function formatDuration(minutes: number): string {
 }
 
 export default function CourseCard({ course }: { course: CourseCardData }) {
+  // Guard against null/empty slug — prevent /courses/null 404
+  if (!course.slug) return null;
+
   return (
     <Link
       href={`/courses/${course.slug}`}
