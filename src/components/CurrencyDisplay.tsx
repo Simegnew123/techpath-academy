@@ -29,7 +29,7 @@ export default function CurrencyDisplay({ priceKES, className = "", showSelector
   useEffect(() => {
     // Detect currency from browser language
     const lang = navigator.language || "en";
-    let detected = "KES";
+    let detected = "ETB";  // Default to Ethiopian Birr
     if (lang.includes("et") || lang.includes("ET")) detected = "ETB";
     else if (lang.includes("sw") || lang.includes("KE")) detected = "KES";
     else if (lang.includes("TZ")) detected = "TZS";
