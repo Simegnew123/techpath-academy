@@ -67,7 +67,7 @@ export default function PWAInstall() {
   return (
     <button
       onClick={handleInstall}
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 hover:shadow-xl animate-fade-in dark:bg-indigo-500 dark:hover:bg-indigo-600"
+      className="fixed bottom-16 right-16 z-50 flex items-center gap-2 rounded-full bg-indigo-600/90 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 backdrop-blur transition hover:bg-indigo-700 hover:shadow-xl animate-fade-in dark:bg-indigo-500/90 dark:hover:bg-indigo-600"
       aria-label="Install TechPath Academy app"
     >
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
