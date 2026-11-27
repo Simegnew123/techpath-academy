@@ -36,7 +36,7 @@ export default function CourseCard({ course }: { course: CourseCardData }) {
   return (
     <Link
       href={`/courses/${course.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800 dark:border-slate-700"
     >
       {/* Cover image */}
       <div className="relative aspect-video w-full overflow-hidden bg-slate-200">
@@ -72,10 +72,10 @@ export default function CourseCard({ course }: { course: CourseCardData }) {
         <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600" aria-hidden="true">
           {course.categoryIcon} {course.categoryName}
         </span>
-        <h3 className="mt-1 font-bold text-slate-900 group-hover:text-indigo-700">
+        <h3 className="mt-1 font-bold text-[#0f172a] group-hover:text-indigo-700 dark:text-slate-100 dark:group-hover:text-indigo-300">
           {course.title}
         </h3>
-        <p className="mt-2 line-clamp-2 flex-1 text-sm text-slate-500">
+        <p className="mt-2 line-clamp-2 flex-1 text-sm text-slate-500 dark:text-slate-400">
           {course.description}
         </p>
 
