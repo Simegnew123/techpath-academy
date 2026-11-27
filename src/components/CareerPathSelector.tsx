@@ -31,7 +31,7 @@ const PATHS: Path[] = [
       { phase: "Phase 2 — Routing & Switching", modules: ["Static & Dynamic Routing", "VLANs, STP & Inter-VLAN Routing", "Access Control Lists (ACLs)"] },
       { phase: "Phase 3 — Advanced", modules: ["Network Security & VPNs", "Wireless Networking", "Troubleshooting Methodology"] },
     ],
-    courseSlug: "networking",
+    courseSlug: "networking-fundamentals",
   },
   {
     id: "soc-analyst",
@@ -47,7 +47,7 @@ const PATHS: Path[] = [
       { phase: "Phase 2 — Detection & Monitoring", modules: ["SIEM & Log Analysis", "Network Traffic Analysis", "Intrusion Detection Systems"] },
       { phase: "Phase 3 — Response", modules: ["Incident Response Playbooks", "Digital Forensics Basics", "Threat Hunting Techniques"] },
     ],
-    courseSlug: "cyber-security",
+    courseSlug: "cyber-security-essentials",
   },
   {
     id: "pentester",
@@ -63,7 +63,7 @@ const PATHS: Path[] = [
       { phase: "Phase 2 — Exploitation", modules: ["Vulnerability Assessment", "Network & Web App Exploitation", "Privilege Escalation Techniques"] },
       { phase: "Phase 3 — Professional Practice", modules: ["Post-Exploitation & Persistence", "Writing Penetration Test Reports", "CTF Practice & Skill Building"] },
     ],
-    courseSlug: "ethical-hacking",
+    courseSlug: "ethical-hacking-basics",
   },
   {
     id: "db-admin",
@@ -95,7 +95,7 @@ const PATHS: Path[] = [
       { phase: "Phase 2 — Hands-On Support", modules: ["Network Troubleshooting Basics", "User & Permission Management", "Scripting for Automation (PowerShell/Bash)"] },
       { phase: "Phase 3 — Professional Skills", modules: ["Security Awareness for Support", "Cloud Services Basics (M365/AWS)", "Career Prep & Certifications"] },
     ],
-    courseSlug: "it-support",
+    courseSlug: "it-support-fundamentals",
   },
   {
     id: "ai-engineer",
@@ -111,7 +111,7 @@ const PATHS: Path[] = [
       { phase: "Phase 2 — Machine Learning", modules: ["Supervised Learning Algorithms", "Unsupervised Learning & Clustering", "Model Evaluation & Hyperparameter Tuning"] },
       { phase: "Phase 3 — Deep Learning & Deployment", modules: ["Neural Networks & Deep Learning", "NLP & Large Language Models", "Deploying ML Models to Production"] },
     ],
-    courseSlug: "artificial-intelligence",
+    courseSlug: "ai-engineering-path",
   },
 ];
 
