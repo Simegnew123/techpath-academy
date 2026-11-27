@@ -32,7 +32,13 @@ export async function GET(req: NextRequest) {
 
   if (!quiz) return NextResponse.json({ quiz: null, questions: [] });
 
-  let questions = getQuestionsForQuiz(quiz.id);
+  let questions: Array<{ id: string; quizId: string; text: string; options: string[]; correctAnswer: string; explanation: string; order: number }> = [];
+  try {
+    questions = getQuestionsForQuiz(quiz.id);
+  } catch {
+    questions = [];
+  }
+
   const isStaff = user.role === "admin" || user.role === "instructor" || user.role === "teaching_assistant";
   if (!isStaff) {
     questions = questions.map((q) => ({
