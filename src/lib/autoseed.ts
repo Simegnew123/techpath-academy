@@ -123,7 +123,21 @@ export function autoSeed() {
     db = readDB();
     if (db.courses.length > 0) {
       console.log("[autoseed] Database already has courses — skipping course seed.");
-      return;
+      // ── Fix existing course category mapping (migration for old deployments) ──
+    mutate((d) => {
+      const fixes: Record<string, string> = {
+        "Linux Administration": "cat-it-support",
+        "Kali Linux for Penetration Testing": "cat-ethical-hacking",
+      };
+      for (const course of d.courses) {
+        if (fixes[course.title] && course.categoryId !== fixes[course.title]) {
+          console.log(`[autoseed] Fixing category for "${course.title}": ${course.categoryId} → ${fixes[course.title]}`);
+          course.categoryId = fixes[course.title];
+        }
+      }
+    });
+
+    return;
     }
 
     console.log("[autoseed] Database is empty — seeding sample data...");
