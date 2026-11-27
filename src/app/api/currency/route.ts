@@ -31,8 +31,8 @@ function detectCurrency(req: NextRequest): string {
   if (lang.includes("en-GB") || lang.includes("GB")) return "GBP";
   if (lang.includes("de") || lang.includes("fr") || lang.includes("EUR")) return "EUR";
 
-  // Default
-  return "KES";
+  // Default to ETB (Ethiopian audience)
+  return "ETB";
 }
 
 // GET /api/currency?amount=4900 — convert amount from KES to detected currency
