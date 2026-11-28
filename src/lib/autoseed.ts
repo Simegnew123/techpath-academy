@@ -254,7 +254,7 @@ export function autoSeed() {
   });
 
   } // end demo student guard
-  console.log("[autoseed] Done! 6 courses, 7 categories, reviews created.");
+  console.log("[autoseed] Done! 8 courses, 7 categories, reviews created.");
   } catch (err) {
     console.error("[autoseed] Error during seeding (non-fatal):", err);
   }
