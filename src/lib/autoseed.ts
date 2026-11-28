@@ -121,26 +121,11 @@ export function autoSeed() {
 
     // Re-read DB to check if we need full seed
     db = readDB();
-    if (db.courses.length > 0) {
-      console.log("[autoseed] Database already has courses — skipping course seed.");
-      // ── Fix existing course category mapping (migration for old deployments) ──
-    mutate((d) => {
-      const fixes: Record<string, string> = {
-        "Linux Administration": "cat-it-support",
-        "Kali Linux for Penetration Testing": "cat-ethical-hacking",
-      };
-      for (const course of d.courses) {
-        if (fixes[course.title] && course.categoryId !== fixes[course.title]) {
-          console.log(`[autoseed] Fixing category for "${course.title}": ${course.categoryId} → ${fixes[course.title]}`);
-          course.categoryId = fixes[course.title];
-        }
-      }
-    });
+    // Continue to check for missing original 6 courses
+    // (the migration above runs regardless; course injection below is conditional)
+  
 
-    return;
-    }
-
-    console.log("[autoseed] Database is empty — seeding sample data...");
+    console.log("[autoseed] Checking for missing courses...");
 
   // 1. Seed categories
   mutate((d) => {
@@ -158,6 +143,7 @@ export function autoSeed() {
   const instructorId = adminUser?.id || uid();
 
   // 3. Create courses (same as seed route)
+    if (!existingTitles.includes("it support fundamentals")) {
   const c1 = createCourse({
     title: "IT Support Fundamentals",
     categoryId: "cat-it-support",
@@ -172,6 +158,8 @@ export function autoSeed() {
   addLesson({ moduleId: m1b.id, courseId: c1.id, title: "The Troubleshooting Process", type: "text", videoUrl: "", content: "## Step-by-step troubleshooting\n\n1. **Identify the problem** — gather information from the user\n2. **Establish a theory** — based on symptoms\n3. **Test the theory** — confirm or rule out\n4. **Establish a plan** — fix the issue\n5. **Verify functionality** — confirm the fix works\n6. **Document** — record for future reference", duration: 25 });
   addLesson({ moduleId: m1b.id, courseId: c1.id, title: "Common Hardware Issues", type: "text", videoUrl: "", content: "## Hardware problems you'll see\n\n- **Won't boot**: Check power supply, RAM, hard drive\n- **Overheating**: Clean fans, check thermal paste\n- **Slow performance**: Check disk space, RAM, malware\n- **Peripherals not working**: Check connections, drivers", duration: 30 });
 
+    } // end IT Support guard
+    if (!existingTitles.includes("ethical hacking basics")) {
   const c2 = createCourse({
     title: "Ethical Hacking Basics",
     categoryId: "cat-ethical-hacking",
@@ -185,6 +173,8 @@ export function autoSeed() {
   const m2b = createModule(c2.id, "Reconnaissance Techniques");
   addLesson({ moduleId: m2b.id, courseId: c2.id, title: "Passive Information Gathering", type: "text", videoUrl: "", content: "## Phase 1: Passive Recon\n\nGathering information about a target **without touching** their systems.\n\n### Techniques\n- **OSINT** (Open Source Intelligence)\n- Google dorking\n- Social media profiling\n- WHOIS lookups\n- DNS enumeration", duration: 35 });
 
+    } // end ethical hacking basics guard
+    if (!existingTitles.includes("networking fundamentals")) {
   const c3 = createCourse({
     title: "Networking Fundamentals",
     categoryId: "cat-networking",
@@ -198,6 +188,8 @@ export function autoSeed() {
   const m3b = createModule(c3.id, "Routing & Switching");
   addLesson({ moduleId: m3b.id, courseId: c3.id, title: "Switches vs Routers", type: "text", videoUrl: "", content: "## Switches\n- Operate at **Layer 2** (Data Link)\n- Forward frames using **MAC addresses**\n- Connect devices within the same network\n\n## Routers\n- Operate at **Layer 3** (Network)\n- Forward packets using **IP addresses**\n- Connect **different networks** together", duration: 25 });
 
+    } // end networking fundamentals guard
+    if (!existingTitles.includes("database administration starter")) {
   const c4 = createCourse({
     title: "Database Administration Starter",
     categoryId: "cat-database",
@@ -211,6 +203,8 @@ export function autoSeed() {
   const m4b = createModule(c4.id, "DBA Daily Tasks");
   addLesson({ moduleId: m4b.id, courseId: c4.id, title: "Backup & Recovery", type: "text", videoUrl: "", content: "## The #1 DBA responsibility\n\n### Backup types\n1. **Full backup** — entire database\n2. **Incremental** — changes since last backup\n3. **Differential** — changes since last full backup\n\n### The 3-2-1 Rule\n- **3** copies of data\n- **2** different storage types\n- **1** offsite copy", duration: 35 });
 
+    } // end database administration starter guard
+    if (!existingTitles.includes("cyber security essentials")) {
   const c5 = createCourse({
     title: "Cyber Security Essentials",
     categoryId: "cat-cyber-security",
@@ -224,6 +218,8 @@ export function autoSeed() {
   const m5b = createModule(c5.id, "Building a Security Culture");
   addLesson({ moduleId: m5b.id, courseId: c5.id, title: "Security Policies & Best Practices", type: "text", videoUrl: "", content: "## Security starts with people\n\n### Essential policies\n- **Password policy** — minimum 12 characters\n- **Access control** — principle of least privilege\n- **Data classification** — public, internal, confidential, restricted\n- **Incident response plan**\n\n### Best practices\n- Enable Multi-Factor Authentication (MFA)\n- Keep all software updated\n- Train employees on phishing awareness\n- Backup data regularly\n- Encrypt sensitive data", duration: 35 });
 
+    } // end cyber security essentials guard
+    if (!existingTitles.includes("introduction to artificial intelligence")) {
   const c6 = createCourse({
     title: "Introduction to Artificial Intelligence",
     categoryId: "cat-ai",
@@ -238,6 +234,9 @@ export function autoSeed() {
   addLesson({ moduleId: m6b.id, courseId: c6.id, title: "The Machine Learning Workflow", type: "text", videoUrl: "", content: "# The ML Workflow\n\n1. **Define the Problem** — What are you trying to predict?\n2. **Collect Data** — quality + quantity matter\n3. **Prepare Data** — clean, transform, split (80/20)\n4. **Choose a Model** — classification, regression, clustering\n5. **Train** — feed training data to the algorithm\n6. **Evaluate** — test on unseen data (accuracy, precision, recall)\n7. **Deploy & Monitor** — put into production\n\n> Models can degrade over time as real-world data changes (data drift).", duration: 40 });
   addLesson({ moduleId: m6b.id, courseId: c6.id, title: "Training, Testing & Overfitting", type: "text", videoUrl: "", content: "# Training vs Testing\n\n## The Golden Rule\n**Never test on your training data.**\n\n## Overfitting\nA model that memorizes training data but fails on new data.\n\n### Prevention:\n1. More data\n2. Simpler model\n3. Regularization\n4. Cross-validation\n5. Early stopping\n6. Dropout (deep learning)\n\n## Underfitting\nA model too simple to capture patterns.\n\n## The Sweet Spot 🎯\nA model that generalizes well — captures patterns without memorizing noise.", duration: 35 });
 
+    } // end introduction to artificial intelligence guard
+  // Add demo student and reviews (only if not already present)
+  if (!readDB().users.some(u => u.id === "demo-student-1")) {
   // 4. Demo reviews
   mutate((d) => {
     const studentId = "demo-student-1";
@@ -254,6 +253,7 @@ export function autoSeed() {
     );
   });
 
+  } // end demo student guard
   console.log("[autoseed] Done! 6 courses, 7 categories, reviews created.");
   } catch (err) {
     console.error("[autoseed] Error during seeding (non-fatal):", err);
